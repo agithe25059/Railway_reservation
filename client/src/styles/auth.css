@@ -346,3 +346,138 @@
   .form-row { grid-template-columns: 1fr; }
   .auth-card { padding: 1.75rem; }
 }
+
+/* ── Step Indicator ─────────────────────────────────────── */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 0 auto 0.4rem;
+  width: 160px;
+}
+
+.step-dot {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700;
+  border: 2px solid var(--border);
+  color: var(--text-muted);
+  background: var(--input-bg);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+.step-dot.active {
+  border-color: var(--primary);
+  color: white;
+  background: var(--primary);
+  box-shadow: 0 0 12px hsla(225, 85%, 60%, 0.4);
+}
+.step-dot.done {
+  border-color: var(--success);
+  color: var(--success);
+  background: hsla(145, 65%, 50%, 0.15);
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+.step-line.done { background: var(--success); }
+
+.step-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding: 0 4px;
+}
+.step-label-active { font-size: 0.75rem; font-weight: 600; color: var(--primary-glow); }
+.step-label-done   { font-size: 0.75rem; font-weight: 600; color: var(--success); }
+.step-label-inactive { font-size: 0.75rem; color: var(--text-muted); }
+
+/* ── OTP Step ────────────────────────────────────────────── */
+.otp-info {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.otp-email {
+  color: var(--primary-glow);
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+.otp-input-field {
+  text-align: center !important;
+  font-size: 1.6rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5rem !important;
+  padding-left: 2.6rem !important;
+}
+
+/* ── Resend & Back ──────────────────────────────────────── */
+.otp-resend {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+.resend-timer {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+.resend-timer span {
+  color: var(--primary-glow);
+  font-weight: 600;
+}
+.resend-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--primary-glow);
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.resend-btn:hover { background: hsla(225, 85%, 60%, 0.1); border-color: var(--primary); }
+
+.back-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 0.5rem;
+  padding: 0.4rem;
+  transition: color 0.2s;
+}
+.back-btn:hover { color: var(--text-primary); }
+
+/* ── Success Banner ─────────────────────────────────────── */
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: hsla(145, 65%, 50%, 0.12);
+  border: 1px solid hsla(145, 65%, 50%, 0.3);
+  border-radius: 10px;
+  color: hsl(145, 65%, 60%);
+  font-size: 0.88rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
