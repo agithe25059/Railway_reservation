@@ -1,0 +1,418 @@
+/* ═══════════════════════════════════════════════════════════
+   RailConnect — Train Pages Styles
+   Black + Orange + White Theme
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Layout ──────────────────────────────────────────────── */
+.train-page {
+  min-height: 100vh;
+  background: hsl(0, 0%, 5%);
+  color: hsl(0, 0%, 97%);
+  font-family: 'Outfit', sans-serif;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.train-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2.5rem;
+  background: hsla(0, 0%, 8%, 0.95);
+  border-bottom: 1px solid hsla(25, 80%, 50%, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.train-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.train-logo { font-size: 1.6rem; }
+.train-brand {
+  font-size: 1.3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, hsl(30,100%,62%), hsl(15,90%,48%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.train-header-right { display: flex; align-items: center; gap: 1rem; }
+.user-greeting { font-size: 0.9rem; color: hsl(0,0%,65%); }
+.logout-btn {
+  background: none;
+  border: 1px solid hsla(25, 80%, 50%, 0.35);
+  color: hsl(25,95%,62%);
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.logout-btn:hover { background: hsla(25,95%,53%,0.1); }
+
+/* ── Hero / Search ───────────────────────────────────────── */
+.search-hero {
+  background: linear-gradient(160deg, hsl(0,0%,8%) 0%, hsl(20,60%,8%) 100%);
+  padding: 3rem 2.5rem 2.5rem;
+  border-bottom: 1px solid hsla(25, 80%, 50%, 0.15);
+}
+
+.search-hero-text { text-align: center; margin-bottom: 2rem; }
+.search-hero-text h1 {
+  font-size: 2.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, hsl(0,0%,97%), hsl(30,100%,62%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.search-hero-text p { color: hsl(0,0%,58%); margin-top: 0.4rem; }
+
+/* ── Search Card ─────────────────────────────────────────── */
+.search-card {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: hsla(0, 0%, 10%, 0.85);
+  border: 1px solid hsla(25, 80%, 50%, 0.25);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+  backdrop-filter: blur(16px);
+}
+
+.search-error {
+  color: hsl(0,80%,68%);
+  background: hsla(0,80%,60%,0.1);
+  border: 1px solid hsla(0,80%,60%,0.25);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+.search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.station-input-group {
+  flex: 1;
+  min-width: 180px;
+  position: relative;
+}
+.station-input-group label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: hsl(25,95%,62%);
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+.station-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.station-icon {
+  position: absolute;
+  left: 0.9rem;
+  font-size: 1rem;
+  z-index: 1;
+  pointer-events: none;
+}
+.station-input-wrap input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.5rem;
+  background: hsla(0,0%,14%,0.9);
+  border: 1px solid hsla(25,80%,50%,0.25);
+  border-radius: 12px;
+  color: hsl(0,0%,97%);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.station-input-wrap input:focus {
+  border-color: hsl(25,95%,53%);
+  box-shadow: 0 0 0 3px hsla(25,95%,53%,0.18);
+}
+.station-input-wrap input[type="date"] { color-scheme: dark; }
+
+/* ── Station Dropdown ────────────────────────────────────── */
+.station-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  background: hsl(0,0%,12%);
+  border: 1px solid hsla(25,80%,50%,0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 200;
+  list-style: none;
+  box-shadow: 0 12px 32px hsla(0,0%,0%,0.5);
+}
+.station-dropdown li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid hsla(0,0%,100%,0.05);
+}
+.station-dropdown li:last-child { border-bottom: none; }
+.station-dropdown li:hover { background: hsla(25,95%,53%,0.12); }
+.sug-code { font-weight: 700; color: hsl(25,95%,62%); font-size: 0.9rem; min-width: 44px; }
+.sug-name { font-size: 0.9rem; color: hsl(0,0%,90%); flex: 1; }
+.sug-city { font-size: 0.78rem; color: hsl(0,0%,55%); }
+
+/* ── Swap Button ─────────────────────────────────────────── */
+.swap-btn {
+  flex-shrink: 0;
+  background: hsla(25,95%,53%,0.12);
+  border: 1px solid hsla(25,80%,50%,0.35);
+  color: hsl(25,95%,62%);
+  border-radius: 50%;
+  width: 40px; height: 40px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 0;
+  align-self: flex-end;
+}
+.swap-btn:hover { background: hsla(25,95%,53%,0.25); transform: rotate(180deg); }
+
+/* ── Search Button ───────────────────────────────────────── */
+.search-btn {
+  flex-shrink: 0;
+  padding: 0.8rem 1.75rem;
+  background: linear-gradient(135deg, hsl(25,95%,53%), hsl(15,90%,48%));
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px hsla(25,95%,53%,0.4);
+  align-self: flex-end;
+  white-space: nowrap;
+}
+.search-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 32px hsla(25,95%,53%,0.55); }
+.search-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.search-spinner {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Results Section ─────────────────────────────────────── */
+.results-section { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem; }
+
+.results-loading {
+  text-align: center;
+  padding: 4rem;
+  color: hsl(0,0%,60%);
+}
+.loading-train { font-size: 3rem; animation: trainMove 1s ease-in-out infinite alternate; }
+@keyframes trainMove { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
+
+.no-results {
+  text-align: center;
+  padding: 4rem;
+  color: hsl(0,0%,55%);
+}
+.no-results span { font-size: 3rem; display: block; margin-bottom: 1rem; }
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.results-header h2 { font-size: 1.3rem; font-weight: 700; color: hsl(0,0%,95%); }
+.results-header span { font-size: 0.9rem; color: hsl(0,0%,55%); }
+
+/* ── Train Card ──────────────────────────────────────────── */
+.train-list { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.train-card {
+  display: flex;
+  background: hsla(0,0%,10%,0.9);
+  border: 1px solid hsla(25,80%,50%,0.18);
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.train-card:hover {
+  border-color: hsla(25,95%,53%,0.5);
+  box-shadow: 0 8px 32px hsla(25,95%,53%,0.15);
+  transform: translateY(-2px);
+}
+
+.train-card-img {
+  width: 220px;
+  min-height: 160px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.train-card-img img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.train-card:hover .train-card-img img { transform: scale(1.05); }
+
+.train-type-badge {
+  position: absolute;
+  top: 0.75rem; left: 0.75rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.3px;
+}
+
+.train-card-body {
+  flex: 1;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.train-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.train-card-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: hsl(0,0%,97%);
+  margin: 0;
+}
+.train-card-number {
+  font-size: 0.82rem;
+  color: hsl(0,0%,55%);
+}
+
+/* ── Timing Block ────────────────────────────────────────── */
+.train-timing {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.time-block { text-align: center; }
+.time { display: block; font-size: 1.3rem; font-weight: 700; color: hsl(0,0%,97%); }
+.station-code { font-size: 0.78rem; color: hsl(25,95%,62%); font-weight: 600; }
+
+.duration-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 100px;
+}
+.duration-line {
+  display: block;
+  width: 80px; height: 2px;
+  background: linear-gradient(90deg, hsl(25,95%,53%), hsl(15,90%,48%));
+  border-radius: 2px;
+}
+.duration-text { font-size: 0.78rem; color: hsl(0,0%,60%); }
+.duration-km { font-size: 0.72rem; color: hsl(0,0%,45%); }
+
+/* ── Class Pills ─────────────────────────────────────────── */
+.train-classes-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+.class-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background: hsla(0,0%,16%,0.9);
+  border: 1px solid hsla(25,80%,50%,0.2);
+  border-radius: 20px;
+}
+.class-code { font-size: 0.78rem; font-weight: 700; color: hsl(25,95%,62%); }
+.class-fare { font-size: 0.8rem; color: hsl(0,0%,80%); }
+
+/* ── Card Footer ─────────────────────────────────────────── */
+.train-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.train-days { font-size: 0.82rem; color: hsl(0,0%,55%); }
+
+.book-btn {
+  padding: 0.5rem 1.25rem;
+  background: linear-gradient(135deg, hsl(25,95%,53%), hsl(15,90%,48%));
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.book-btn:hover { box-shadow: 0 4px 16px hsla(25,95%,53%,0.45); transform: translateY(-1px); }
+
+/* ── Browse Section ──────────────────────────────────────── */
+.browse-section { margin-top: 1rem; }
+.browse-section h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; color: hsl(0,0%,90%); }
+.browse-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; }
+
+.browse-card {
+  background: hsla(0,0%,10%,0.9);
+  border: 1px solid hsla(25,80%,50%,0.15);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.25s;
+  cursor: default;
+}
+.browse-card:hover { border-color: hsla(25,95%,53%,0.4); transform: translateY(-3px); box-shadow: 0 8px 24px hsla(25,95%,53%,0.12); }
+.browse-card-img { height: 140px; overflow: hidden; }
+.browse-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.browse-card:hover .browse-card-img img { transform: scale(1.06); }
+.browse-card-body { padding: 1rem 1.2rem; }
+.browse-type { font-size: 1rem; font-weight: 700; }
+.browse-card-body p { font-size: 0.82rem; color: hsl(0,0%,58%); margin-top: 0.35rem; line-height: 1.5; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .train-card { flex-direction: column; }
+  .train-card-img { width: 100%; height: 160px; }
+  .search-row { flex-direction: column; }
+  .swap-btn { align-self: center; }
+  .search-btn { width: 100%; }
+  .train-header { padding: 1rem 1.25rem; }
+  .search-hero { padding: 2rem 1.25rem; }
+  .results-section { padding: 1.5rem 1.25rem; }
+  .train-timing { flex-wrap: wrap; justify-content: center; }
+}

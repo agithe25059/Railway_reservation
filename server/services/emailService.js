@@ -1,13 +1,36 @@
 const nodemailer = require('nodemailer');
 
-// Create reusable transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Gmail App Password (16 chars)
-  },
-});
+// Create reusable transporter (works for Gmail and Google Workspace accounts)
+let transporter;
+
+const getTransporter = async () => {
+  if (transporter) return transporter;
+
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS &&
+      !process.env.EMAIL_USER.includes('your.railconnect')) {
+    // Use real Gmail SMTP
+    transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+  } else {
+    // Fallback: Ethereal test account (OTP logged to console)
+    const testAccount = await nodemailer.createTestAccount();
+    transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: { user: testAccount.user, pass: testAccount.pass },
+    });
+    console.log('📧 Using Ethereal test email (dev mode)');
+  }
+  return transporter;
+};
 
 /**
  * Generate a 6-digit numeric OTP
@@ -20,8 +43,9 @@ const generateOTP = () => {
  * Send OTP email to the user
  */
 const sendOTPEmail = async (toEmail, otp, fullName) => {
+  const t = await getTransporter();
   const mailOptions = {
-    from: `"RailConnect 🚂" <${process.env.EMAIL_USER}>`,
+    from: `"RailConnect 🚂" <${process.env.EMAIL_USER || 'noreply@railconnect.com'}>`,
     to: toEmail,
     subject: '🔐 Your RailConnect Verification Code',
     html: `
@@ -73,7 +97,18 @@ const sendOTPEmail = async (toEmail, otp, fullName) => {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  const info = await t.sendMail(mailOptions);
+
+  // In dev/test mode, log a preview URL to the console
+  const previewUrl = nodemailer.getTestMessageUrl(info);
+  if (previewUrl) {
+    console.log(`\n📧 ═══════════════════════════════════════`);
+    console.log(`   OTP for ${toEmail}: ${otp}`);
+    console.log(`   Preview email: ${previewUrl}`);
+    console.log(`📧 ═══════════════════════════════════════\n`);
+  } else {
+    console.log(`✅ OTP email sent to ${toEmail}`);
+  }
 };
 
 module.exports = { generateOTP, sendOTPEmail };
