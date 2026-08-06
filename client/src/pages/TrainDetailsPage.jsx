@@ -5,6 +5,18 @@ import '../styles/booking.css';
 
 const CLASS_NAMES = { '1A':'First AC', '2A':'Second AC', '3A':'Third AC', 'SL':'Sleeper', 'CC':'AC Chair Car', '2S':'Second Sitting', 'GN':'General' };
 
+const calculateAgeFromDOB = (dobString) => {
+  if (!dobString) return '';
+  const dob = new Date(dobString);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age >= 0 ? age : 0;
+};
+
 export default function TrainDetailsPage() {
   const { number } = useParams();
   const navigate = useNavigate();
@@ -27,10 +39,11 @@ export default function TrainDetailsPage() {
   const [mobileMsg, setMobileMsg] = useState('');
   const [mobileErr, setMobileErr] = useState('');
 
-  // Passengers State (Each passenger has individual Aadhaar OTP verification)
+  // Passengers State (Each passenger asks for DOB and auto-calculates Age)
   const [passengers, setPassengers] = useState([
     {
       name: '',
+      dob: '',
       age: '',
       gender: 'M',
       aadhaar_number: '',
@@ -179,6 +192,7 @@ export default function TrainDetailsPage() {
       ...passengers,
       {
         name: '',
+        dob: '',
         age: '',
         gender: 'M',
         aadhaar_number: '',
@@ -202,6 +216,12 @@ export default function TrainDetailsPage() {
     setPassengers(prev => {
       const copy = [...prev];
       copy[index][field] = value;
+
+      // When DOB changes, automatically calculate exact age in years!
+      if (field === 'dob') {
+        copy[index].age = calculateAgeFromDOB(value);
+      }
+
       // If user edits aadhaar number, reset verification status for that passenger
       if (field === 'aadhaar_number') {
         copy[index].aadhaar_verified = false;
@@ -227,8 +247,9 @@ export default function TrainDetailsPage() {
     for (let i = 0; i < passengers.length; i++) {
       const p = passengers[i];
       if (!p.name.trim()) return setBookingError(`Passenger #${i+1}: Name is required.`);
-      if (!p.age || parseInt(p.age) <= 0 || parseInt(p.age) > 120) {
-        return setBookingError(`Passenger #${i+1}: Please enter a valid age.`);
+      if (!p.dob) return setBookingError(`Passenger #${i+1}: Date of Birth (DOB) is required.`);
+      if (!p.age || parseInt(p.age) < 0 || parseInt(p.age) > 120) {
+        return setBookingError(`Passenger #${i+1}: Invalid Date of Birth.`);
       }
       if (!p.aadhaar_number || p.aadhaar_number.length !== 12) {
         return setBookingError(`Passenger #${i+1}: 12-digit Aadhaar number is required.`);
@@ -343,7 +364,7 @@ export default function TrainDetailsPage() {
                   <tr>
                     <th>#</th>
                     <th>Passenger Name</th>
-                    <th>Age / Gender</th>
+                    <th>Calculated Age / Gender</th>
                     <th>Aadhaar Number</th>
                     <th>Assigned Seat</th>
                   </tr>
@@ -528,7 +549,7 @@ export default function TrainDetailsPage() {
                   )}
                 </div>
 
-                {/* ── PASSENGERS SECTION WITH INDIVIDUAL AADHAAR OTP VERIFICATION FOR EACH ── */}
+                {/* ── PASSENGERS SECTION WITH DOB INPUT & AUTO AGE CALCULATION ── */}
                 <div className="passengers-section">
                   <div className="passengers-header">
                     <h3>Passenger Details & Aadhaar Verification ({passengers.length}/4)</h3>
@@ -548,48 +569,61 @@ export default function TrainDetailsPage() {
                         )}
                       </div>
 
-                      <div className="p-inputs-grid-aadhaar">
-                        <input
-                          type="text"
-                          placeholder="Full Name"
-                          className="booking-input"
-                          value={p.name}
-                          onChange={e => handlePassengerChange(idx, 'name', e.target.value)}
-                          required
-                        />
+                      <div className="p-inputs-grid-dob">
+                        <div className="p-input-field">
+                          <label className="p-field-lbl">Full Name</label>
+                          <input
+                            type="text"
+                            placeholder="Passenger Full Name"
+                            className="booking-input"
+                            value={p.name}
+                            onChange={e => handlePassengerChange(idx, 'name', e.target.value)}
+                            required
+                          />
+                        </div>
 
-                        <input
-                          type="number"
-                          placeholder="Age"
-                          min={1} max={120}
-                          className="booking-input"
-                          value={p.age}
-                          onChange={e => handlePassengerChange(idx, 'age', e.target.value)}
-                          required
-                        />
+                        <div className="p-input-field">
+                          <label className="p-field-lbl">
+                            Date of Birth (DOB) {p.age !== '' ? <b className="calculated-age-tag">({p.age} yrs old)</b> : ''}
+                          </label>
+                          <input
+                            type="date"
+                            className="booking-input"
+                            max={new Date().toISOString().split('T')[0]}
+                            value={p.dob}
+                            onChange={e => handlePassengerChange(idx, 'dob', e.target.value)}
+                            required
+                          />
+                        </div>
 
-                        <select
-                          className="booking-input"
-                          value={p.gender}
-                          onChange={e => handlePassengerChange(idx, 'gender', e.target.value)}
-                        >
-                          <option value="M">Male</option>
-                          <option value="F">Female</option>
-                          <option value="O">Other</option>
-                        </select>
+                        <div className="p-input-field">
+                          <label className="p-field-lbl">Gender</label>
+                          <select
+                            className="booking-input"
+                            value={p.gender}
+                            onChange={e => handlePassengerChange(idx, 'gender', e.target.value)}
+                          >
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                            <option value="O">Other</option>
+                          </select>
+                        </div>
 
-                        <select
-                          className="booking-input"
-                          value={p.berth_preference}
-                          onChange={e => handlePassengerChange(idx, 'berth_preference', e.target.value)}
-                        >
-                          <option value="No Preference">No Berth Preference</option>
-                          <option value="Lower">Lower Berth</option>
-                          <option value="Middle">Middle Berth</option>
-                          <option value="Upper">Upper Berth</option>
-                          <option value="Side Lower">Side Lower</option>
-                          <option value="Side Upper">Side Upper</option>
-                        </select>
+                        <div className="p-input-field">
+                          <label className="p-field-lbl">Berth Preference</label>
+                          <select
+                            className="booking-input"
+                            value={p.berth_preference}
+                            onChange={e => handlePassengerChange(idx, 'berth_preference', e.target.value)}
+                          >
+                            <option value="No Preference">No Berth Preference</option>
+                            <option value="Lower">Lower Berth</option>
+                            <option value="Middle">Middle Berth</option>
+                            <option value="Upper">Upper Berth</option>
+                            <option value="Side Lower">Side Lower</option>
+                            <option value="Side Upper">Side Upper</option>
+                          </select>
+                        </div>
                       </div>
 
                       {/* INDIVIDUAL PASSENGER AADHAAR OTP VERIFICATION BOX */}

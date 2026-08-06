@@ -371,13 +371,29 @@
   letter-spacing: 0.5px;
 }
 
-.p-inputs-grid-aadhaar {
+.p-inputs-grid-dob {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 2fr;
-  gap: 0.5rem;
+  grid-template-columns: 2fr 1.6fr 1fr 1.6fr;
+  gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
-.grid-full-width { grid-column: 1 / -1; }
+.p-input-field {
+  display: flex;
+  flex-direction: column;
+}
+.p-field-lbl {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: hsl(25, 95%, 62%);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+.calculated-age-tag {
+  color: hsl(145, 65%, 60%);
+  font-weight: 800;
+  font-size: 0.72rem;
+}
 
 .passenger-aadhaar-verification-box {
   background: hsl(0, 0%, 10%);
