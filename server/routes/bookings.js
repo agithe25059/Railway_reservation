@@ -55,7 +55,11 @@ router.post('/send-mobile-otp', authenticateToken, async (req, res) => {
 
     // Send OTP to user's registered email
     await sendOTPEmail(req.user.email, otp, req.user.full_name, `Mobile Number (${phone})`);
-    res.json({ success: true, message: `OTP sent to your email to verify mobile number ${phone}.` });
+    res.json({
+      success: true,
+      message: `OTP sent to your email (${req.user.email}) for mobile ${phone}.`,
+      dev_otp: otp
+    });
   } catch (err) {
     console.error('Send mobile OTP error:', err);
     res.status(500).json({ message: 'Failed to send Mobile OTP.' });
@@ -112,7 +116,11 @@ router.post('/send-aadhaar-otp', authenticateToken, async (req, res) => {
 
     const maskedAadhaar = `XXXX-XXXX-${aadhaar_number.trim().slice(-4)}`;
     await sendOTPEmail(req.user.email, otp, req.user.full_name, `Aadhaar Card (${maskedAadhaar})`);
-    res.json({ success: true, message: `Aadhaar OTP sent to your registered email for ${maskedAadhaar}.` });
+    res.json({
+      success: true,
+      message: `Aadhaar OTP sent to email (${req.user.email}) for ${maskedAadhaar}.`,
+      dev_otp: otp
+    });
   } catch (err) {
     console.error('Send Aadhaar OTP error:', err);
     res.status(500).json({ message: 'Failed to send Aadhaar OTP.' });

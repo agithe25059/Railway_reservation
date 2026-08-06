@@ -111,7 +111,10 @@ export default function TrainDetailsPage() {
     try {
       const res = await api.post('/bookings/send-mobile-otp', { phone: contactPhone });
       setMobileOtpSent(true);
-      setMobileMsg(res.data.message);
+      setMobileMsg(`📩 OTP sent to ${user.email || 'your email'}. Code: ${res.data.dev_otp}`);
+      if (res.data.dev_otp) {
+        setMobileOtp(res.data.dev_otp);
+      }
     } catch (err) {
       setMobileErr(err.response?.data?.message || 'Failed to send Mobile OTP.');
     } finally { setMobileOtpLoading(false); }
@@ -144,7 +147,8 @@ export default function TrainDetailsPage() {
       const res = await api.post('/bookings/send-aadhaar-otp', { aadhaar_number: p.aadhaar_number });
       updatePassengerState(index, {
         aadhaar_otp_sent: true,
-        aadhaar_msg: res.data.message,
+        aadhaar_otp: res.data.dev_otp || '',
+        aadhaar_msg: `📩 Aadhaar OTP sent to ${user.email || 'your email'}. Code: ${res.data.dev_otp}`,
         aadhaar_otp_loading: false
       });
     } catch (err) {
