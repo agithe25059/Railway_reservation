@@ -332,15 +332,31 @@ export default function TrainSearchPage() {
               <div className="quick-route-title">Popular Routes</div>
               <div className="quick-routes-grid">
                 {[
-                  { from:'NDLS', to:'HWH', label:'New Delhi → Kolkata' },
-                  { from:'NDLS', to:'MAS', label:'New Delhi → Chennai' },
-                  { from:'NDLS', to:'BCT', label:'New Delhi → Mumbai' },
-                  { from:'NDLS', to:'SBC', label:'New Delhi → Bengaluru' },
+                  { fromCode:'NDLS', fromName:'New Delhi', toCode:'MAS', toName:'Chennai Central', label:'New Delhi → Chennai' },
+                  { fromCode:'NDLS', fromName:'New Delhi', toCode:'HWH', toName:'Howrah (Kolkata)', label:'New Delhi → Kolkata' },
+                  { fromCode:'NDLS', fromName:'New Delhi', toCode:'BCT', toName:'Mumbai Central', label:'New Delhi → Mumbai' },
+                  { fromCode:'NDLS', fromName:'New Delhi', toCode:'SBC', toName:'KSR Bengaluru', label:'New Delhi → Bengaluru' },
+                  { fromCode:'NDLS', fromName:'New Delhi', toCode:'BSB', toName:'Varanasi', label:'New Delhi → Varanasi' },
+                  { fromCode:'BCT', fromName:'Mumbai Central', toCode:'ADI', toName:'Ahmedabad', label:'Mumbai → Ahmedabad' },
+                  { fromCode:'MAS', fromName:'Chennai Central', toCode:'MYS', toName:'Mysuru', label:'Chennai → Mysuru' },
+                  { fromCode:'NDLS', fromName:'New Delhi', toCode:'SC', toName:'Secunderabad', label:'New Delhi → Hyderabad' },
                 ].map(r => (
                   <button key={r.label} className="quick-route-btn"
-                    onClick={() => {
-                      setFrom(r.from); setTo(r.to);
-                      setFromSelected({ code: r.from }); setToSelected({ code: r.to });
+                    onClick={async () => {
+                      const fromObj = { code: r.fromCode, name: r.fromName };
+                      const toObj = { code: r.toCode, name: r.toName };
+                      setFrom(`${r.fromName} (${r.fromCode})`);
+                      setTo(`${r.toName} (${r.toCode})`);
+                      setFromSelected(fromObj);
+                      setToSelected(toObj);
+                      setError(''); setLoading(true); setSearched(true);
+                      try {
+                        const res = await api.get(`/trains/search?from=${r.fromCode}&to=${r.toCode}&date=${date}`);
+                        setResults(res.data.trains);
+                      } catch (err) {
+                        setError(err.response?.data?.message || 'Search failed. Try again.');
+                        setResults([]);
+                      } finally { setLoading(false); }
                     }}>
                     🚆 {r.label}
                   </button>
