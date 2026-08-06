@@ -1,7 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/auth';
 import '../styles/trains.css';
+
+const DAY_MAP = { '1':'M','2':'T','3':'W','4':'Th','5':'F','6':'Sa','7':'Su' };
+const ALL_DAYS = ['1','2','3','4','5','6','7'];
+
+const TYPE_COLOR = {
+  'Rajdhani':'#e63946','Shatabdi':'#3a86ff','Duronto':'#fb5607',
+  'Vande Bharat':'#8338ec','Superfast':'#06d6a0','Express':'#f4a261',
+  'Mail':'#f4a261','Passenger':'#adb5bd','Local':'#adb5bd'
+};
+
+const CLASS_LABELS = { '1A':'1st AC','2A':'2nd AC','3A':'3rd AC','SL':'Sleeper','CC':'Chair Car','2S':'2nd Sitting','GN':'General' };
 
 export default function TrainSearchPage() {
   const navigate = useNavigate();
@@ -16,8 +27,11 @@ export default function TrainSearchPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState('');
-  const fromRef = useRef(null);
-  const toRef = useRef(null);
+  const [sortBy, setSortBy] = useState('departure');
+  const [filterClass, setFilterClass] = useState('ALL');
+  const [filterType, setFilterType] = useState('ALL');
+
+  const user = JSON.parse(localStorage.getItem('rr_user') || '{}');
 
   const searchStations = async (query, setter) => {
     if (query.length < 2) return setter([]);
@@ -32,7 +46,7 @@ export default function TrainSearchPage() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!fromSelected || !toSelected) return setError('Please select stations from the suggestions.');
+    if (!fromSelected || !toSelected) return setError('Please select stations from the dropdown.');
     if (fromSelected.code === toSelected.code) return setError('Source and destination cannot be the same.');
     setError(''); setLoading(true); setSearched(true);
     try {
@@ -44,240 +58,298 @@ export default function TrainSearchPage() {
     } finally { setLoading(false); }
   };
 
-  const getDayLabels = (days) => {
-    const map = { '1':'Mon','2':'Tue','3':'Wed','4':'Thu','5':'Fri','6':'Sat','7':'Sun' };
-    return days.split('').map(d => map[d] || d).join(', ');
+  const swapStations = () => {
+    const tmpFrom = from, tmpFromSel = fromSelected;
+    setFrom(to); setFromSelected(toSelected);
+    setTo(tmpFrom); setToSelected(tmpFromSel);
   };
 
-  const getTypeColor = (type) => {
-    const colors = {
-      'Rajdhani': '#e63946', 'Shatabdi': '#3a86ff', 'Duronto': '#fb5607',
-      'Vande Bharat': '#8338ec', 'Superfast': '#06d6a0', 'Express': '#ffd166',
-      'Mail': '#ffd166', 'Passenger': '#adb5bd', 'Local': '#adb5bd'
-    };
-    return colors[type] || '#adb5bd';
-  };
+  // Filtered + sorted results
+  const filteredResults = results
+    .filter(t => {
+      if (filterClass !== 'ALL' && !t.classes?.some(c => c.class_code === filterClass)) return false;
+      if (filterType !== 'ALL' && t.train_type !== filterType) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'departure') return a.departure_time?.localeCompare(b.departure_time);
+      if (sortBy === 'arrival') return a.arrival_time?.localeCompare(b.arrival_time);
+      if (sortBy === 'duration') return a.duration?.localeCompare(b.duration);
+      return 0;
+    });
 
-  const getTypeImage = (type) => {
-    const map = { 'Rajdhani': '/trains/rajdhani.png', 'Shatabdi': '/trains/shatabdi.png',
-      'Duronto': '/trains/duronto.png', 'Vande Bharat': '/trains/vande_bharat.png' };
-    return map[type] || '/trains/express.png';
-  };
-
-  const user = JSON.parse(localStorage.getItem('rr_user') || '{}');
+  const availableClasses = [...new Set(results.flatMap(t => t.classes?.map(c => c.class_code) || []))];
+  const availableTypes = [...new Set(results.map(t => t.train_type))];
 
   return (
-    <div className="train-page">
-      {/* ── Topbar ── */}
-      <header className="train-header">
-        <div className="train-header-left">
-          <span className="train-logo">🚂</span>
-          <span className="train-brand">RailConnect</span>
+    <div className="irctc-page">
+      {/* ── Top Nav ── */}
+      <header className="irctc-nav">
+        <div className="irctc-nav-left">
+          <span className="irctc-logo">🚂</span>
+          <span className="irctc-brand">RailConnect</span>
         </div>
-        <div className="train-header-right">
-          <span className="user-greeting">👤 {user.full_name || 'User'}</span>
-          <button className="logout-btn" onClick={() => { localStorage.clear(); navigate('/login'); }}>Logout</button>
+        <nav className="irctc-nav-links">
+          <span className="nav-link active">Train Search</span>
+          <span className="nav-link">My Bookings</span>
+          <span className="nav-link">PNR Status</span>
+        </nav>
+        <div className="irctc-nav-right">
+          <span className="user-chip">👤 {user.full_name || 'User'}</span>
+          <button className="nav-logout" onClick={() => { localStorage.clear(); navigate('/login'); }}>Logout</button>
         </div>
       </header>
 
-      {/* ── Hero Search ── */}
-      <section className="search-hero">
-        <div className="search-hero-text">
-          <h1>Find Your Train</h1>
-          <p>Search from 10,000+ trains across India</p>
-        </div>
-
-        <form className="search-card" onSubmit={handleSearch} id="train-search-form">
-          {error && <div className="search-error">⚠️ {error}</div>}
-          <div className="search-row">
+      {/* ── Search Bar ── */}
+      <div className="irctc-search-bar">
+        <form className="irctc-search-form" onSubmit={handleSearch} id="irctc-search-form">
+          <div className="irctc-search-fields">
             {/* FROM */}
-            <div className="station-input-group" ref={fromRef}>
-              <label>FROM</label>
-              <div className="station-input-wrap">
-                <span className="station-icon">🚉</span>
-                <input
-                  id="from-station"
-                  type="text"
-                  placeholder="City or station code"
-                  value={from}
-                  onChange={e => { setFrom(e.target.value); setFromSelected(null); }}
-                  autoComplete="off"
-                />
+            <div className="irctc-field-wrap">
+              <div className="irctc-field-label">FROM</div>
+              <div className="irctc-field-inner">
+                <input id="from-station" type="text" className="irctc-input" placeholder="Station name or code"
+                  value={from} autoComplete="off"
+                  onChange={e => { setFrom(e.target.value); setFromSelected(null); }} />
+                {fromSuggestions.length > 0 && !fromSelected && (
+                  <ul className="irctc-dropdown">
+                    {fromSuggestions.map(s => (
+                      <li key={s.id} onClick={() => { setFrom(`${s.name} (${s.code})`); setFromSelected(s); setFromSuggestions([]); }}>
+                        <b>{s.code}</b> — {s.name}, {s.city}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              {fromSuggestions.length > 0 && !fromSelected && (
-                <ul className="station-dropdown">
-                  {fromSuggestions.map(s => (
-                    <li key={s.id} onClick={() => { setFrom(`${s.name} (${s.code})`); setFromSelected(s); setFromSuggestions([]); }}>
-                      <span className="sug-code">{s.code}</span>
-                      <span className="sug-name">{s.name}</span>
-                      <span className="sug-city">{s.city}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
 
-            {/* SWAP */}
-            <button type="button" className="swap-btn" title="Swap stations"
-              onClick={() => { const tmp = from; setFrom(to); setTo(tmp); const ts = fromSelected; setFromSelected(toSelected); setToSelected(ts); }}>
-              ⇌
-            </button>
+            <button type="button" className="irctc-swap" onClick={swapStations} title="Swap">⇄</button>
 
             {/* TO */}
-            <div className="station-input-group" ref={toRef}>
-              <label>TO</label>
-              <div className="station-input-wrap">
-                <span className="station-icon">📍</span>
-                <input
-                  id="to-station"
-                  type="text"
-                  placeholder="City or station code"
-                  value={to}
-                  onChange={e => { setTo(e.target.value); setToSelected(null); }}
-                  autoComplete="off"
-                />
+            <div className="irctc-field-wrap">
+              <div className="irctc-field-label">TO</div>
+              <div className="irctc-field-inner">
+                <input id="to-station" type="text" className="irctc-input" placeholder="Station name or code"
+                  value={to} autoComplete="off"
+                  onChange={e => { setTo(e.target.value); setToSelected(null); }} />
+                {toSuggestions.length > 0 && !toSelected && (
+                  <ul className="irctc-dropdown">
+                    {toSuggestions.map(s => (
+                      <li key={s.id} onClick={() => { setTo(`${s.name} (${s.code})`); setToSelected(s); setToSuggestions([]); }}>
+                        <b>{s.code}</b> — {s.name}, {s.city}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              {toSuggestions.length > 0 && !toSelected && (
-                <ul className="station-dropdown">
-                  {toSuggestions.map(s => (
-                    <li key={s.id} onClick={() => { setTo(`${s.name} (${s.code})`); setToSelected(s); setToSuggestions([]); }}>
-                      <span className="sug-code">{s.code}</span>
-                      <span className="sug-name">{s.name}</span>
-                      <span className="sug-city">{s.city}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
 
             {/* DATE */}
-            <div className="station-input-group">
-              <label>DATE</label>
-              <div className="station-input-wrap">
-                <span className="station-icon">📅</span>
-                <input
-                  id="travel-date"
-                  type="date"
-                  value={date}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={e => setDate(e.target.value)}
-                />
+            <div className="irctc-field-wrap irctc-date-wrap">
+              <div className="irctc-field-label">DATE OF JOURNEY</div>
+              <input id="travel-date" type="date" className="irctc-input irctc-date-input"
+                value={date} min={new Date().toISOString().split('T')[0]}
+                onChange={e => setDate(e.target.value)} />
+            </div>
+
+            <button id="search-trains-btn" type="submit" className="irctc-search-btn" disabled={loading}>
+              {loading ? <span className="irctc-spinner" /> : '🔍 Search Trains'}
+            </button>
+          </div>
+          {error && <div className="irctc-error">⚠️ {error}</div>}
+        </form>
+      </div>
+
+      {/* ── Loading ── */}
+      {loading && (
+        <div className="irctc-loading">
+          <div className="irctc-loading-train">🚂</div>
+          <p>Fetching available trains…</p>
+        </div>
+      )}
+
+      {/* ── Results Layout ── */}
+      {!loading && searched && (
+        <div className="irctc-results-layout">
+
+          {/* ── Filters Sidebar ── */}
+          <aside className="irctc-filters">
+            <div className="filter-header">🔧 Filter Results</div>
+
+            {availableClasses.length > 0 && (
+              <div className="filter-section">
+                <div className="filter-title">Travel Class</div>
+                <label className={`filter-opt ${filterClass === 'ALL' ? 'active' : ''}`}>
+                  <input type="radio" name="class" value="ALL" checked={filterClass === 'ALL'}
+                    onChange={() => setFilterClass('ALL')} /> All Classes
+                </label>
+                {availableClasses.map(c => (
+                  <label key={c} className={`filter-opt ${filterClass === c ? 'active' : ''}`}>
+                    <input type="radio" name="class" value={c} checked={filterClass === c}
+                      onChange={() => setFilterClass(c)} />
+                    {c} — {CLASS_LABELS[c]}
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {availableTypes.length > 0 && (
+              <div className="filter-section">
+                <div className="filter-title">Train Type</div>
+                <label className={`filter-opt ${filterType === 'ALL' ? 'active' : ''}`}>
+                  <input type="radio" name="type" value="ALL" checked={filterType === 'ALL'}
+                    onChange={() => setFilterType('ALL')} /> All Types
+                </label>
+                {availableTypes.map(t => (
+                  <label key={t} className={`filter-opt ${filterType === t ? 'active' : ''}`}>
+                    <input type="radio" name="type" value={t} checked={filterType === t}
+                      onChange={() => setFilterType(t)} />
+                    <span style={{ color: TYPE_COLOR[t] }}>●</span> {t}
+                  </label>
+                ))}
+              </div>
+            )}
+          </aside>
+
+          {/* ── Train List ── */}
+          <main className="irctc-main">
+            {/* Route + Count + Sort */}
+            <div className="irctc-results-topbar">
+              <div className="irctc-route-info">
+                <span className="irctc-route-text">
+                  {fromSelected?.name} ({fromSelected?.code}) → {toSelected?.name} ({toSelected?.code})
+                </span>
+                <span className="irctc-date-badge">📅 {new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' })}</span>
+              </div>
+              <div className="irctc-sort-wrap">
+                <span className="irctc-count">{filteredResults.length} Train{filteredResults.length !== 1 ? 's' : ''} Found</span>
+                <select className="irctc-sort-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                  <option value="departure">Sort: Departure ↑</option>
+                  <option value="arrival">Sort: Arrival ↑</option>
+                  <option value="duration">Sort: Duration ↑</option>
+                </select>
               </div>
             </div>
 
-            <button id="search-trains-btn" type="submit" className="search-btn" disabled={loading}>
-              {loading ? <span className="search-spinner" /> : '🔍 Search Trains'}
-            </button>
-          </div>
-        </form>
-      </section>
+            {/* Column Headers */}
+            {filteredResults.length > 0 && (
+              <div className="irctc-col-headers">
+                <div className="col-train">Train</div>
+                <div className="col-time">Departs</div>
+                <div className="col-dur">Duration</div>
+                <div className="col-time">Arrives</div>
+                <div className="col-days">Runs On</div>
+                <div className="col-classes">Availability</div>
+              </div>
+            )}
 
-      {/* ── Results ── */}
-      <section className="results-section">
-        {loading && (
-          <div className="results-loading">
-            <div className="loading-train">🚂</div>
-            <p>Searching trains...</p>
-          </div>
-        )}
+            {/* No results */}
+            {filteredResults.length === 0 && (
+              <div className="irctc-no-results">
+                <div className="irctc-no-icon">🚫</div>
+                <h3>No Trains Found</h3>
+                <p>No trains available for this route{filterClass !== 'ALL' || filterType !== 'ALL' ? ' with selected filters' : ''}.</p>
+                {(filterClass !== 'ALL' || filterType !== 'ALL') && (
+                  <button onClick={() => { setFilterClass('ALL'); setFilterType('ALL'); }} className="irctc-clear-filter">
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+            )}
 
-        {!loading && searched && results.length === 0 && (
-          <div className="no-results">
-            <span>😔</span>
-            <p>No trains found for this route.</p>
-            <small>Try different stations or check the date.</small>
-          </div>
-        )}
-
-        {!loading && results.length > 0 && (
-          <div className="results-wrapper">
-            <div className="results-header">
-              <h2>{results.length} Train{results.length > 1 ? 's' : ''} Found</h2>
-              <span>{fromSelected?.city} → {toSelected?.city} · {date}</span>
-            </div>
-            <div className="train-list">
-              {results.map(train => (
-                <div key={train.id} className="train-card" onClick={() => navigate(`/trains/${train.train_number}`)}>
-                  {/* Train DP */}
-                  <div className="train-card-img">
-                    <img src={getTypeImage(train.train_type)} alt={train.train_name} />
-                    <span className="train-type-badge" style={{ background: getTypeColor(train.train_type) }}>
+            {/* Train Rows */}
+            {filteredResults.map(train => (
+              <div key={train.id} className="irctc-train-row">
+                {/* Train Name + Number */}
+                <div className="col-train">
+                  <div className="train-row-name">{train.train_name}</div>
+                  <div className="train-row-meta">
+                    <span className="train-row-num">#{train.train_number}</span>
+                    <span className="train-row-type" style={{ background: TYPE_COLOR[train.train_type] + '22', color: TYPE_COLOR[train.train_type] }}>
                       {train.train_type}
                     </span>
                   </div>
+                </div>
 
-                  {/* Train Info */}
-                  <div className="train-card-body">
-                    <div className="train-card-top">
-                      <div>
-                        <h3 className="train-card-name">{train.train_name}</h3>
-                        <span className="train-card-number">#{train.train_number}</span>
-                      </div>
-                      <div className="train-timing">
-                        <div className="time-block">
-                          <span className="time">{train.departure_time?.slice(0,5)}</span>
-                          <span className="station-code">{train.source_code}</span>
-                        </div>
-                        <div className="duration-block">
-                          <span className="duration-line" />
-                          <span className="duration-text">{train.duration}</span>
-                          <span className="duration-km">{train.distance_km} km</span>
-                        </div>
-                        <div className="time-block">
-                          <span className="time">{train.arrival_time?.slice(0,5)}</span>
-                          <span className="station-code">{train.dest_code}</span>
-                        </div>
-                      </div>
-                    </div>
+                {/* Departs */}
+                <div className="col-time">
+                  <div className="time-big">{train.departure_time?.slice(0,5)}</div>
+                  <div className="time-station">{train.source_code}</div>
+                </div>
 
-                    {/* Classes & Fares */}
-                    <div className="train-classes-row">
-                      {train.classes?.map(cls => (
-                        <div key={cls.id} className="class-pill">
-                          <span className="class-code">{cls.class_code}</span>
-                          <span className="class-fare">₹{cls.base_fare.toLocaleString()}</span>
-                        </div>
-                      ))}
-                    </div>
+                {/* Duration */}
+                <div className="col-dur">
+                  <div className="dur-arrow">──────→</div>
+                  <div className="dur-text">{train.duration}</div>
+                  <div className="dur-km">{train.distance_km} km</div>
+                </div>
 
-                    <div className="train-card-footer">
-                      <span className="train-days">🗓 {getDayLabels(train.days_of_operation)}</span>
-                      <button className="book-btn" onClick={e => { e.stopPropagation(); navigate(`/trains/${train.train_number}`); }}>
-                        View Details →
-                      </button>
-                    </div>
+                {/* Arrives */}
+                <div className="col-time">
+                  <div className="time-big">{train.arrival_time?.slice(0,5)}</div>
+                  <div className="time-station">{train.dest_code}</div>
+                </div>
+
+                {/* Days */}
+                <div className="col-days">
+                  <div className="day-dots">
+                    {ALL_DAYS.map(d => (
+                      <span key={d} className={`day-dot ${train.days_of_operation?.includes(d) ? 'day-on' : 'day-off'}`}>
+                        {DAY_MAP[d]}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Quick browse cards */}
-        {!searched && (
-          <div className="browse-section">
-            <h2>Popular Train Types</h2>
-            <div className="browse-grid">
-              {[
-                { type: 'Rajdhani', img: '/trains/rajdhani.png', desc: 'Premium overnight express connecting Delhi to major cities', color: '#e63946' },
-                { type: 'Shatabdi', img: '/trains/shatabdi.png', desc: 'Day intercity express — fast, comfortable, air-conditioned', color: '#3a86ff' },
-                { type: 'Duronto', img: '/trains/duronto.png', desc: 'Non-stop long distance express with limited halts', color: '#fb5607' },
-                { type: 'Vande Bharat', img: '/trains/vande_bharat.png', desc: 'India\'s fastest semi-high-speed modern train', color: '#8338ec' },
-              ].map(item => (
-                <div key={item.type} className="browse-card">
-                  <div className="browse-card-img">
-                    <img src={item.img} alt={item.type} />
+                {/* Classes + Book */}
+                <div className="col-classes">
+                  <div className="class-grid">
+                    {train.classes?.map(cls => (
+                      <div key={cls.id} className="class-avail-box">
+                        <div className="class-avail-code">{cls.class_code}</div>
+                        <div className="class-avail-status avail">Available</div>
+                        <div className="class-avail-fare">₹{Number(cls.base_fare).toLocaleString()}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="browse-card-body">
-                    <span className="browse-type" style={{ color: item.color }}>{item.type} Express</span>
-                    <p>{item.desc}</p>
-                  </div>
+                  <button className="irctc-book-btn" onClick={() => navigate(`/trains/${train.train_number}`)}>
+                    Book Now
+                  </button>
                 </div>
-              ))}
+              </div>
+            ))}
+          </main>
+        </div>
+      )}
+
+      {/* ── Initial Browse (before search) ── */}
+      {!searched && !loading && (
+        <div className="irctc-welcome">
+          <div className="irctc-welcome-inner">
+            <h2>🚂 Search Trains Across India</h2>
+            <p>Enter your origin and destination above to find available trains, check seat availability and book tickets.</p>
+            <div className="irctc-quick-routes">
+              <div className="quick-route-title">Popular Routes</div>
+              <div className="quick-routes-grid">
+                {[
+                  { from:'NDLS', to:'HWH', label:'New Delhi → Kolkata' },
+                  { from:'NDLS', to:'MAS', label:'New Delhi → Chennai' },
+                  { from:'NDLS', to:'BCT', label:'New Delhi → Mumbai' },
+                  { from:'NDLS', to:'SBC', label:'New Delhi → Bengaluru' },
+                ].map(r => (
+                  <button key={r.label} className="quick-route-btn"
+                    onClick={() => {
+                      setFrom(r.from); setTo(r.to);
+                      setFromSelected({ code: r.from }); setToSelected({ code: r.to });
+                    }}>
+                    🚆 {r.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        )}
-      </section>
+        </div>
+      )}
     </div>
   );
 }
