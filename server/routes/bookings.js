@@ -34,6 +34,8 @@ async function ensureInventoryRecord(poolOrConn, train_id, travel_date, class_co
   );
 }
 
+const { sendSMS } = require('../services/smsService');
+
 // ── OTP ENDPOINTS FOR MOBILE & AADHAAR VERIFICATION ───────────────────────────
 
 // POST /api/bookings/send-mobile-otp
@@ -46,19 +48,20 @@ router.post('/send-mobile-otp', authenticateToken, async (req, res) => {
   try {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+    const formattedPhone = phone.trim();
 
-    await pool.query('DELETE FROM otp_verifications WHERE email = ?', [`mobile_${req.user.id}_${phone}`]);
+    await pool.query('DELETE FROM otp_verifications WHERE email = ?', [`mobile_${req.user.id}_${formattedPhone}`]);
     await pool.query(
       'INSERT INTO otp_verifications (email, otp, expires_at) VALUES (?, ?, ?)',
-      [`mobile_${req.user.id}_${phone}`, otp, expiresAt]
+      [`mobile_${req.user.id}_${formattedPhone}`, otp, expiresAt]
     );
 
-    // Send OTP to user's registered email
-    await sendOTPEmail(req.user.email, otp, req.user.full_name, `Mobile Number (${phone})`);
+    // Send SMS to mobile number
+    await sendSMS(formattedPhone, `Your RailConnect Mobile Verification OTP is ${otp}. Valid for 5 minutes.`);
+
     res.json({
       success: true,
-      message: `OTP sent to your email (${req.user.email}) for mobile ${phone}.`,
-      dev_otp: otp
+      message: `OTP sent via SMS to mobile number +91 ${formattedPhone}.`
     });
   } catch (err) {
     console.error('Send mobile OTP error:', err);
@@ -115,11 +118,13 @@ router.post('/send-aadhaar-otp', authenticateToken, async (req, res) => {
     );
 
     const maskedAadhaar = `XXXX-XXXX-${aadhaar_number.trim().slice(-4)}`;
-    await sendOTPEmail(req.user.email, otp, req.user.full_name, `Aadhaar Card (${maskedAadhaar})`);
+    
+    // Also send SMS to registered mobile
+    await sendSMS(req.user.phone || '8639594879', `Your Aadhaar Verification OTP for ${maskedAadhaar} is ${otp}. Valid for 5 mins.`);
+
     res.json({
       success: true,
-      message: `Aadhaar OTP sent to email (${req.user.email}) for ${maskedAadhaar}.`,
-      dev_otp: otp
+      message: `Aadhaar OTP sent via SMS to mobile registered with Aadhaar ${maskedAadhaar}.`
     });
   } catch (err) {
     console.error('Send Aadhaar OTP error:', err);
