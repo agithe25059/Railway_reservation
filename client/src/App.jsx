@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import TrainSearchPage from './pages/TrainSearchPage';
+import TrainDetailsPage from './pages/TrainDetailsPage';
+import MyBookingsPage from './pages/MyBookingsPage';
 
 // Auth guard
 const PrivateRoute = ({ children }) => {
@@ -25,6 +27,16 @@ export default function App() {
         {/* Train Search */}
         <Route path="/trains" element={
           <PrivateRoute><TrainSearchPage /></PrivateRoute>
+        } />
+
+        {/* Train Details & Seat Booking */}
+        <Route path="/trains/:number" element={
+          <PrivateRoute><TrainDetailsPage /></PrivateRoute>
+        } />
+
+        {/* My Bookings & PNR Status */}
+        <Route path="/my-bookings" element={
+          <PrivateRoute><MyBookingsPage /></PrivateRoute>
         } />
 
         {/* Catch-all */}

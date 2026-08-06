@@ -1,0 +1,583 @@
+/* ═══════════════════════════════════════════════════════════
+   RailConnect — Booking & PNR Pages Styles
+   Black + Orange + White Theme
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.booking-page {
+  min-height: 100vh;
+  background: hsl(0, 0%, 6%);
+  color: hsl(0, 0%, 95%);
+  font-family: 'Outfit', sans-serif;
+}
+
+/* ── Top Navbar ──────────────────────────────────────────── */
+.booking-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 56px;
+  background: hsl(0, 0%, 9%);
+  border-bottom: 2px solid hsl(25, 95%, 53%);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.booking-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+.brand-icon { font-size: 1.5rem; }
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, hsl(30,100%,62%), hsl(15,90%,48%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.booking-nav-right { display: flex; align-items: center; gap: 1rem; }
+.nav-bookings-btn {
+  background: hsla(25, 95%, 53%, 0.12);
+  border: 1px solid hsla(25, 80%, 50%, 0.35);
+  color: hsl(25, 95%, 62%);
+  padding: 0.35rem 0.9rem;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-bookings-btn:hover { background: hsla(25, 95%, 53%, 0.22); }
+.user-name { font-size: 0.85rem; color: hsl(0, 0%, 65%); }
+
+/* ── Main Container ──────────────────────────────────────── */
+.booking-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 3rem;
+}
+
+.back-link {
+  background: none;
+  border: none;
+  color: hsl(25, 95%, 62%);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+  display: inline-block;
+}
+.back-link:hover { text-decoration: underline; }
+
+/* ── Booking Grid ────────────────────────────────────────── */
+.booking-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* ── Train Info Column ───────────────────────────────────── */
+.train-header-card {
+  background: hsl(0, 0%, 9%);
+  border: 1px solid hsla(25, 80%, 50%, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.train-header-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.train-type-tag {
+  background: hsla(25, 95%, 53%, 0.15);
+  color: hsl(25, 95%, 62%);
+  border: 1px solid hsla(25, 80%, 50%, 0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.train-num-tag { font-size: 0.8rem; color: hsl(0, 0%, 50%); }
+.train-title { font-size: 1.4rem; font-weight: 800; color: hsl(0, 0%, 97%); margin-bottom: 1.25rem; }
+
+.route-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: hsl(0, 0%, 12%);
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+}
+.route-stop { display: flex; flex-direction: column; }
+.stop-time { font-size: 1.3rem; font-weight: 800; color: hsl(0, 0%, 97%); }
+.stop-code { font-size: 0.82rem; font-weight: 700; color: hsl(25, 95%, 62%); }
+.stop-city { font-size: 0.75rem; color: hsl(0, 0%, 55%); }
+
+.route-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: hsl(0, 0%, 55%);
+}
+.arrow-line {
+  width: 70px; height: 2px;
+  background: linear-gradient(90deg, hsl(25, 95%, 53%), hsl(15, 90%, 48%));
+  border-radius: 2px;
+}
+
+/* Schedule Card */
+.schedule-card {
+  background: hsl(0, 0%, 9%);
+  border: 1px solid hsla(25, 80%, 50%, 0.18);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+.schedule-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: hsl(0, 0%, 90%); }
+.schedule-list { display: flex; flex-direction: column; gap: 0.75rem; max-height: 350px; overflow-y: auto; }
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  background: hsl(0, 0%, 12%);
+  border-radius: 10px;
+}
+.stop-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: hsla(25, 95%, 53%, 0.15);
+  color: hsl(25, 95%, 62%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.stop-info { flex: 1; display: flex; flex-direction: column; }
+.stop-info strong { font-size: 0.85rem; color: hsl(0, 0%, 90%); }
+.stop-info span { font-size: 0.75rem; color: hsl(0, 0%, 50%); }
+.stop-times { font-size: 0.75rem; color: hsl(25, 95%, 65%); display: flex; flex-direction: column; text-align: right; }
+
+/* ── Booking Form Column ─────────────────────────────────── */
+.booking-form-card {
+  background: hsl(0, 0%, 9%);
+  border: 1px solid hsla(25, 80%, 50%, 0.22);
+  border-radius: 18px;
+  padding: 1.75rem;
+}
+.booking-form-card h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; color: hsl(0, 0%, 95%); }
+
+.booking-alert-error {
+  background: hsla(0, 80%, 60%, 0.12);
+  border: 1px solid hsla(0, 80%, 60%, 0.3);
+  color: hsl(0, 80%, 70%);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-group { margin-bottom: 1.25rem; }
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: hsl(25, 95%, 62%);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.booking-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: hsl(0, 0%, 13%);
+  border: 1px solid hsla(25, 80%, 50%, 0.25);
+  border-radius: 10px;
+  color: hsl(0, 0%, 95%);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.92rem;
+  outline: none;
+  transition: all 0.2s;
+}
+.booking-input:focus {
+  border-color: hsl(25, 95%, 53%);
+  box-shadow: 0 0 0 3px hsla(25, 95%, 53%, 0.15);
+}
+.booking-input[type="date"] { color-scheme: dark; }
+
+/* Class Selector Grid */
+.class-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.6rem;
+}
+.class-select-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6rem 0.5rem;
+  background: hsl(0, 0%, 13%);
+  border: 1px solid hsla(25, 80%, 50%, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+}
+.class-select-btn:hover { border-color: hsl(25, 95%, 53%); background: hsla(25, 95%, 53%, 0.08); }
+.class-select-btn.active {
+  border-color: hsl(25, 95%, 53%);
+  background: hsla(25, 95%, 53%, 0.18);
+  box-shadow: 0 0 12px hsla(25, 95%, 53%, 0.25);
+}
+.c-code { font-size: 0.95rem; font-weight: 800; color: hsl(25, 95%, 62%); }
+.c-name { font-size: 0.72rem; color: hsl(0, 0%, 65%); margin: 0.1rem 0; }
+.c-fare { font-size: 0.8rem; font-weight: 700; color: hsl(0, 0%, 90%); }
+
+/* Availability Box */
+.avail-status-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: hsl(0, 0%, 12%);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+  font-size: 0.88rem;
+  color: hsl(0, 0%, 75%);
+}
+.avail-badge { font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.82rem; }
+.avail-yes { background: hsla(145, 65%, 50%, 0.18); color: hsl(145, 65%, 60%); border: 1px solid hsla(145, 65%, 50%, 0.3); }
+.avail-no { background: hsla(0, 80%, 60%, 0.18); color: hsl(0, 80%, 70%); border: 1px solid hsla(0, 80%, 60%, 0.3); }
+.checking-txt { color: hsl(25, 95%, 65%); font-style: italic; }
+
+/* Passengers Section */
+.passengers-section { margin-bottom: 1.5rem; }
+.passengers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.passengers-header h3 { font-size: 0.95rem; font-weight: 700; color: hsl(0, 0%, 90%); }
+.add-passenger-btn {
+  background: hsla(25, 95%, 53%, 0.12);
+  border: 1px solid hsla(25, 80%, 50%, 0.35);
+  color: hsl(25, 95%, 62%);
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.add-passenger-btn:hover { background: hsla(25, 95%, 53%, 0.22); }
+
+.passenger-card-input {
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsla(0, 0%, 100%, 0.08);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+.p-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: hsl(25, 95%, 62%);
+}
+.remove-p-btn {
+  background: none;
+  border: none;
+  color: hsl(0, 80%, 65%);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.remove-p-btn:hover { text-decoration: underline; }
+
+.p-inputs-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 1.8fr;
+  gap: 0.5rem;
+}
+
+/* Fare Summary & Confirm Button */
+.fare-summary-box {
+  background: hsl(0, 0%, 12%);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+.fare-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  color: hsl(0, 0%, 65%);
+  margin-bottom: 0.4rem;
+}
+.fare-total {
+  border-top: 1px solid hsla(0, 0%, 100%, 0.1);
+  padding-top: 0.5rem;
+  margin-top: 0.4rem;
+  margin-bottom: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: hsl(25, 95%, 62%);
+}
+
+.confirm-booking-btn {
+  width: 100%;
+  padding: 0.9rem;
+  background: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(15, 90%, 48%));
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px hsla(25, 95%, 53%, 0.4);
+}
+.confirm-booking-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px hsla(25, 95%, 53%, 0.55);
+}
+.confirm-booking-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.btn-spinner {
+  display: inline-block;
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Ticket Success Card ─────────────────────────────────── */
+.ticket-success-card {
+  background: hsl(0, 0%, 9%);
+  border: 1px solid hsla(145, 65%, 50%, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 750px;
+  margin: 0 auto;
+}
+
+.success-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.success-icon { font-size: 2.5rem; }
+.success-header h2 { font-size: 1.5rem; font-weight: 800; color: hsl(145, 65%, 60%); }
+.success-header p { color: hsl(0, 0%, 65%); font-size: 0.9rem; }
+
+.pnr-banner {
+  background: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(15, 90%, 48%));
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.pnr-label { font-size: 0.8rem; font-weight: 800; color: rgba(255,255,255,0.85); letter-spacing: 1px; }
+.pnr-code { font-size: 1.8rem; font-weight: 800; color: white; letter-spacing: 3px; }
+
+.ticket-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  background: hsl(0, 0%, 12%);
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+.detail-lbl { display: block; font-size: 0.75rem; color: hsl(0, 0%, 55%); margin-bottom: 0.2rem; }
+.fare-highlight { color: hsl(25, 95%, 62%); font-size: 1.1rem; }
+
+.passenger-assigned-list h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem; color: hsl(0, 0%, 90%); }
+.assigned-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+.assigned-table th, .assigned-table td { padding: 0.6rem 0.8rem; text-align: left; font-size: 0.88rem; }
+.assigned-table th { background: hsl(0, 0%, 14%); color: hsl(25, 95%, 62%); font-weight: 700; }
+.assigned-table td { border-bottom: 1px solid hsla(0, 0%, 100%, 0.06); }
+.seat-badge {
+  background: hsla(25, 95%, 53%, 0.2);
+  color: hsl(25, 95%, 65%);
+  border: 1px solid hsla(25, 80%, 50%, 0.35);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-weight: 800;
+}
+
+.ticket-actions { display: flex; gap: 1rem; }
+.action-btn-primary {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(15, 90%, 48%));
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+.action-btn-secondary {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  background: hsl(0, 0%, 14%);
+  border: 1px solid hsla(0, 0%, 100%, 0.15);
+  color: hsl(0, 0%, 85%);
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── My Bookings Page ────────────────────────────────────── */
+.my-bookings-container { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+.pnr-search-card {
+  background: hsl(0, 0%, 9%);
+  border: 1px solid hsla(25, 80%, 50%, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.pnr-search-card h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: hsl(0, 0%, 95%); }
+.pnr-search-form { display: flex; gap: 0.75rem; }
+.pnr-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: hsl(0, 0%, 13%);
+  border: 1px solid hsla(25, 80%, 50%, 0.25);
+  border-radius: 10px;
+  color: hsl(0, 0%, 95%);
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  outline: none;
+}
+.pnr-search-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(15, 90%, 48%));
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pnr-error-msg { color: hsl(0, 80%, 70%); font-size: 0.85rem; margin-top: 0.5rem; }
+
+.pnr-result-box {
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsla(25, 80%, 50%, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+.pnr-res-head { display: flex; justify-content: space-between; margin-bottom: 0.6rem; }
+.status-badge-conf {
+  background: hsla(145, 65%, 50%, 0.2);
+  color: hsl(145, 65%, 60%);
+  border: 1px solid hsla(145, 65%, 50%, 0.35);
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.no-bookings-card {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: hsl(0, 0%, 9%);
+  border: 1px solid hsla(25, 80%, 50%, 0.15);
+  border-radius: 16px;
+  color: hsl(0, 0%, 55%);
+}
+.no-b-icon { font-size: 3rem; display: block; margin-bottom: 0.75rem; }
+
+.ticket-card-item {
+  background: hsl(0, 0%, 9%);
+  border: 1px solid hsla(25, 80%, 50%, 0.18);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.ticket-item-top { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+.ticket-pnr { font-size: 0.85rem; color: hsl(25, 95%, 62%); }
+.ticket-train-title { font-size: 1.15rem; font-weight: 700; color: hsl(0, 0%, 95%); margin-top: 0.2rem; }
+.t-num { color: hsl(0, 0%, 50%); font-size: 0.85rem; }
+.ticket-status-col { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; }
+.ticket-fare-txt { font-size: 1.1rem; font-weight: 800; color: hsl(25, 95%, 62%); }
+
+.ticket-route-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: hsl(0, 0%, 12%);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.t-station { display: flex; flex-direction: column; }
+.t-time { font-size: 1.2rem; font-weight: 800; color: hsl(0, 0%, 95%); }
+.t-code { font-size: 0.8rem; font-weight: 700; color: hsl(25, 95%, 62%); }
+.t-name { font-size: 0.75rem; color: hsl(0, 0%, 55%); }
+.t-arrow { flex: 1; text-align: center; font-size: 0.75rem; color: hsl(0, 0%, 50%); min-width: 80px; }
+.t-line { height: 2px; background: linear-gradient(90deg, hsl(25, 95%, 53%), hsl(15, 90%, 48%)); margin-top: 0.2rem; }
+.t-meta { font-size: 0.82rem; color: hsl(0, 0%, 75%); display: flex; flex-direction: column; gap: 0.2rem; }
+
+.ticket-passengers-box h4 { font-size: 0.85rem; font-weight: 700; color: hsl(0, 0%, 75%); margin-bottom: 0.5rem; }
+.passengers-pills { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.passenger-pill {
+  background: hsl(0, 0%, 14%);
+  border: 1px solid hsla(25, 80%, 50%, 0.2);
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.p-name { color: hsl(0, 0%, 90%); font-weight: 600; }
+.p-seat { background: hsla(25, 95%, 53%, 0.2); color: hsl(25, 95%, 65%); padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 800; font-size: 0.75rem; }
+.p-berth { color: hsl(0, 0%, 55%); font-size: 0.75rem; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .booking-grid { grid-template-columns: 1fr; }
+  .p-inputs-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .booking-container { padding: 1rem; }
+  .ticket-details-grid { grid-template-columns: 1fr; }
+  .p-inputs-grid { grid-template-columns: 1fr; }
+  .ticket-actions { flex-direction: column; }
+}
