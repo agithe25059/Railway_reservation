@@ -17,10 +17,30 @@ export default function TrainDetailsPage() {
   // Booking Form State
   const [selectedClass, setSelectedClass] = useState(null);
   const [travelDate, setTravelDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Mobile Verification State
   const [contactPhone, setContactPhone] = useState('');
+  const [mobileOtp, setMobileOtp] = useState('');
+  const [mobileOtpSent, setMobileOtpSent] = useState(false);
+  const [mobileVerified, setMobileVerified] = useState(false);
+  const [mobileOtpLoading, setMobileOtpLoading] = useState(false);
+  const [mobileMsg, setMobileMsg] = useState('');
+  const [mobileErr, setMobileErr] = useState('');
+
+  // Aadhaar Verification State
+  const [primaryAadhaar, setPrimaryAadhaar] = useState('');
+  const [aadhaarOtp, setAadhaarOtp] = useState('');
+  const [aadhaarOtpSent, setAadhaarOtpSent] = useState(false);
+  const [aadhaarVerified, setAadhaarVerified] = useState(false);
+  const [aadhaarOtpLoading, setAadhaarOtpLoading] = useState(false);
+  const [aadhaarMsg, setAadhaarMsg] = useState('');
+  const [aadhaarErr, setAadhaarErr] = useState('');
+
+  // Passengers
   const [passengers, setPassengers] = useState([
-    { name: '', age: '', gender: 'M', berth_preference: 'No Preference' }
+    { name: '', age: '', gender: 'M', aadhaar_number: '', berth_preference: 'No Preference' }
   ]);
+
   const [availability, setAvailability] = useState(null);
   const [checkingAvail, setCheckingAvail] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -50,7 +70,6 @@ export default function TrainDetailsPage() {
     fetchDetails();
   }, [number]);
 
-  // Fetch real-time seat availability whenever selectedClass or travelDate changes
   useEffect(() => {
     if (!train || !selectedClass || !travelDate) return;
     const checkAvailability = async () => {
@@ -67,9 +86,73 @@ export default function TrainDetailsPage() {
     checkAvailability();
   }, [train, selectedClass, travelDate]);
 
+  // Send Mobile OTP
+  const handleSendMobileOtp = async () => {
+    if (!contactPhone || contactPhone.length !== 10) {
+      return setMobileErr('Please enter a valid 10-digit mobile number.');
+    }
+    setMobileErr(''); setMobileMsg(''); setMobileOtpLoading(true);
+    try {
+      const res = await api.post('/bookings/send-mobile-otp', { phone: contactPhone });
+      setMobileOtpSent(true);
+      setMobileMsg(res.data.message);
+    } catch (err) {
+      setMobileErr(err.response?.data?.message || 'Failed to send Mobile OTP.');
+    } finally { setMobileOtpLoading(false); }
+  };
+
+  // Verify Mobile OTP
+  const handleVerifyMobileOtp = async () => {
+    if (!mobileOtp || mobileOtp.length !== 6) {
+      return setMobileErr('Please enter the 6-digit Mobile OTP.');
+    }
+    setMobileErr(''); setMobileMsg(''); setMobileOtpLoading(true);
+    try {
+      const res = await api.post('/bookings/verify-mobile-otp', { phone: contactPhone, otp: mobileOtp });
+      setMobileVerified(true);
+      setMobileMsg(res.data.message);
+    } catch (err) {
+      setMobileErr(err.response?.data?.message || 'Invalid Mobile OTP.');
+    } finally { setMobileOtpLoading(false); }
+  };
+
+  // Send Aadhaar OTP
+  const handleSendAadhaarOtp = async () => {
+    if (!primaryAadhaar || primaryAadhaar.length !== 12) {
+      return setAadhaarErr('Please enter a valid 12-digit Aadhaar number.');
+    }
+    setAadhaarErr(''); setAadhaarMsg(''); setAadhaarOtpLoading(true);
+    try {
+      const res = await api.post('/bookings/send-aadhaar-otp', { aadhaar_number: primaryAadhaar });
+      setAadhaarOtpSent(true);
+      setAadhaarMsg(res.data.message);
+    } catch (err) {
+      setAadhaarErr(err.response?.data?.message || 'Failed to send Aadhaar OTP.');
+    } finally { setAadhaarOtpLoading(false); }
+  };
+
+  // Verify Aadhaar OTP
+  const handleVerifyAadhaarOtp = async () => {
+    if (!aadhaarOtp || aadhaarOtp.length !== 6) {
+      return setAadhaarErr('Please enter the 6-digit Aadhaar OTP.');
+    }
+    setAadhaarErr(''); setAadhaarMsg(''); setAadhaarOtpLoading(true);
+    try {
+      const res = await api.post('/bookings/verify-aadhaar-otp', { aadhaar_number: primaryAadhaar, otp: aadhaarOtp });
+      setAadhaarVerified(true);
+      setAadhaarMsg(res.data.message);
+      // Auto fill primary passenger's aadhaar
+      const updated = [...passengers];
+      updated[0].aadhaar_number = primaryAadhaar;
+      setPassengers(updated);
+    } catch (err) {
+      setAadhaarErr(err.response?.data?.message || 'Invalid Aadhaar OTP.');
+    } finally { setAadhaarOtpLoading(false); }
+  };
+
   const addPassenger = () => {
     if (passengers.length >= 4) return;
-    setPassengers([...passengers, { name: '', age: '', gender: 'M', berth_preference: 'No Preference' }]);
+    setPassengers([...passengers, { name: '', age: '', gender: 'M', aadhaar_number: '', berth_preference: 'No Preference' }]);
   };
 
   const removePassenger = (index) => {
@@ -87,9 +170,11 @@ export default function TrainDetailsPage() {
     e.preventDefault();
     setBookingError('');
 
-    // Validations
-    if (!contactPhone || contactPhone.trim().length < 10) {
-      return setBookingError('Please enter a valid 10-digit mobile number.');
+    if (!mobileVerified) {
+      return setBookingError('Please verify your Contact Mobile Number via OTP first.');
+    }
+    if (!aadhaarVerified) {
+      return setBookingError('Please verify Primary Passenger Aadhaar Number via OTP first.');
     }
 
     for (let i = 0; i < passengers.length; i++) {
@@ -97,6 +182,9 @@ export default function TrainDetailsPage() {
       if (!p.name.trim()) return setBookingError(`Passenger ${i+1}: Name is required.`);
       if (!p.age || parseInt(p.age) <= 0 || parseInt(p.age) > 120) {
         return setBookingError(`Passenger ${i+1}: Please enter a valid age.`);
+      }
+      if (!p.aadhaar_number || p.aadhaar_number.length !== 12) {
+        return setBookingError(`Passenger ${i+1}: 12-digit Aadhaar number is required.`);
       }
     }
 
@@ -164,7 +252,7 @@ export default function TrainDetailsPage() {
               <span className="success-icon">🎉</span>
               <div>
                 <h2>Booking Confirmed!</h2>
-                <p>Your ticket has been booked successfully.</p>
+                <p>📧 Booking status email sent to <b>{user.email}</b>!</p>
               </div>
             </div>
 
@@ -183,8 +271,8 @@ export default function TrainDetailsPage() {
                 <strong>{confirmedBooking.class_code} · {confirmedBooking.travel_date}</strong>
               </div>
               <div>
-                <span className="detail-lbl">Contact Phone</span>
-                <strong>📱 {confirmedBooking.contact_phone}</strong>
+                <span className="detail-lbl">Verified Mobile</span>
+                <strong>📱 {confirmedBooking.contact_phone} ✅</strong>
               </div>
               <div>
                 <span className="detail-lbl">Total Fare</span>
@@ -193,13 +281,14 @@ export default function TrainDetailsPage() {
             </div>
 
             <div className="passenger-assigned-list">
-              <h3>Assigned Passengers & Seats</h3>
+              <h3>Verified Passengers & Assigned Seats</h3>
               <table className="assigned-table">
                 <thead>
                   <tr>
                     <th>#</th>
                     <th>Passenger Name</th>
                     <th>Age / Gender</th>
+                    <th>Aadhaar Number</th>
                     <th>Assigned Seat</th>
                   </tr>
                 </thead>
@@ -209,6 +298,7 @@ export default function TrainDetailsPage() {
                       <td>{idx + 1}</td>
                       <td><b>{p.name}</b></td>
                       <td>{p.age} yrs / {p.gender}</td>
+                      <td><span className="aadhaar-badge">XXXX-XXXX-{p.aadhaar_number?.slice(-4)} ✅</span></td>
                       <td><span className="seat-badge">{p.seat_number}</span></td>
                     </tr>
                   ))}
@@ -219,9 +309,6 @@ export default function TrainDetailsPage() {
             <div className="ticket-actions">
               <button className="action-btn-primary" onClick={() => navigate('/my-bookings')}>
                 View My Bookings →
-              </button>
-              <button className="action-btn-secondary" onClick={() => { setConfirmedBooking(null); setPassengers([{ name: '', age: '', gender: 'M', berth_preference: 'No Preference' }]); }}>
-                Book Another Ticket
               </button>
             </div>
           </div>
@@ -278,10 +365,10 @@ export default function TrainDetailsPage() {
               )}
             </div>
 
-            {/* Right Column: Reservation & Passenger Form */}
+            {/* Right Column: Reservation & Verification Form */}
             <div className="booking-form-col">
               <form className="booking-form-card" onSubmit={handleBookTickets}>
-                <h2>Book Tickets</h2>
+                <h2>Reserve Seats</h2>
 
                 {bookingError && <div className="booking-alert-error">⚠️ {bookingError}</div>}
 
@@ -330,19 +417,114 @@ export default function TrainDetailsPage() {
                   )}
                 </div>
 
-                {/* Mobile Phone Number */}
-                <div className="form-group">
-                  <label htmlFor="contact-phone">Contact Mobile Number (For SMS & PNR)</label>
-                  <input
-                    id="contact-phone"
-                    type="tel"
-                    className="booking-input"
-                    placeholder="10-digit mobile number (e.g. 9876543210)"
-                    maxLength={10}
-                    value={contactPhone}
-                    onChange={e => setContactPhone(e.target.value.replace(/\D/g, ''))}
-                    required
-                  />
+                {/* ── STEP 1: MOBILE NUMBER OTP VERIFICATION ── */}
+                <div className="verification-card-step">
+                  <div className="v-step-head">
+                    <span className={`v-step-num ${mobileVerified ? 'done' : 'active'}`}>{mobileVerified ? '✓' : '1'}</span>
+                    <span>1. Contact Mobile Verification (SMS & PNR)</span>
+                  </div>
+
+                  {mobileErr && <div className="v-error">⚠️ {mobileErr}</div>}
+                  {mobileMsg && <div className="v-success">✅ {mobileMsg}</div>}
+
+                  {!mobileVerified ? (
+                    <div className="v-otp-box">
+                      <div className="v-input-row">
+                        <input
+                          type="tel"
+                          className="booking-input"
+                          placeholder="10-digit Mobile Number"
+                          maxLength={10}
+                          value={contactPhone}
+                          onChange={e => setContactPhone(e.target.value.replace(/\D/g, ''))}
+                          disabled={mobileOtpSent}
+                        />
+                        {!mobileOtpSent ? (
+                          <button type="button" className="v-btn" onClick={handleSendMobileOtp} disabled={mobileOtpLoading}>
+                            {mobileOtpLoading ? 'Sending…' : 'Send Mobile OTP'}
+                          </button>
+                        ) : (
+                          <button type="button" className="v-btn-secondary" onClick={() => setMobileOtpSent(false)}>Change</button>
+                        )}
+                      </div>
+
+                      {mobileOtpSent && (
+                        <div className="v-input-row margin-top-sm">
+                          <input
+                            type="text"
+                            className="booking-input"
+                            placeholder="Enter 6-digit Mobile OTP"
+                            maxLength={6}
+                            value={mobileOtp}
+                            onChange={e => setMobileOtp(e.target.value.replace(/\D/g, ''))}
+                          />
+                          <button type="button" className="v-btn-success" onClick={handleVerifyMobileOtp} disabled={mobileOtpLoading}>
+                            {mobileOtpLoading ? 'Verifying…' : 'Verify Mobile OTP'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="verified-badge-row">
+                      <span>📱 Mobile <b>{contactPhone}</b> Verified via OTP</span>
+                      <span className="badge-check">VERIFIED ✅</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── STEP 2: AADHAAR OTP VERIFICATION ── */}
+                <div className="verification-card-step">
+                  <div className="v-step-head">
+                    <span className={`v-step-num ${aadhaarVerified ? 'done' : 'active'}`}>{aadhaarVerified ? '✓' : '2'}</span>
+                    <span>2. Primary Passenger Aadhaar Verification</span>
+                  </div>
+
+                  {aadhaarErr && <div className="v-error">⚠️ {aadhaarErr}</div>}
+                  {aadhaarMsg && <div className="v-success">✅ {aadhaarMsg}</div>}
+
+                  {!aadhaarVerified ? (
+                    <div className="v-otp-box">
+                      <div className="v-input-row">
+                        <input
+                          type="text"
+                          className="booking-input"
+                          placeholder="12-digit Aadhaar Number"
+                          maxLength={12}
+                          value={primaryAadhaar}
+                          onChange={e => setPrimaryAadhaar(e.target.value.replace(/\D/g, ''))}
+                          disabled={aadhaarOtpSent}
+                        />
+                        {!aadhaarOtpSent ? (
+                          <button type="button" className="v-btn" onClick={handleSendAadhaarOtp} disabled={aadhaarOtpLoading}>
+                            {aadhaarOtpLoading ? 'Sending…' : 'Send Aadhaar OTP'}
+                          </button>
+                        ) : (
+                          <button type="button" className="v-btn-secondary" onClick={() => setAadhaarOtpSent(false)}>Change</button>
+                        )}
+                      </div>
+
+                      {aadhaarOtpSent && (
+                        <div className="v-input-row margin-top-sm">
+                          <input
+                            type="text"
+                            className="booking-input"
+                            placeholder="Enter 6-digit Aadhaar OTP"
+                            maxLength={6}
+                            value={aadhaarOtp}
+                            onChange={e => setAadhaarOtp(e.target.value.replace(/\D/g, ''))}
+                          />
+                          <button type="button" className="v-btn-success" onClick={handleVerifyAadhaarOtp} disabled={aadhaarOtpLoading}>
+                            {aadhaarOtpLoading ? 'Verifying…' : 'Verify Aadhaar OTP'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="verified-badge-row">
+                      <span>🆔 Aadhaar <b>XXXX-XXXX-{primaryAadhaar.slice(-4)}</b> Verified via OTP</span>
+                      <span className="badge-check">VERIFIED ✅</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Passenger Inputs */}
@@ -359,13 +541,13 @@ export default function TrainDetailsPage() {
                   {passengers.map((p, idx) => (
                     <div key={idx} className="passenger-card-input">
                       <div className="p-card-top">
-                        <span>Passenger #{idx + 1}</span>
-                        {passengers.length > 1 && (
+                        <span>Passenger #{idx + 1} {idx === 0 ? '(Primary - Aadhaar Verified)' : ''}</span>
+                        {passengers.length > 1 && idx > 0 && (
                           <button type="button" className="remove-p-btn" onClick={() => removePassenger(idx)}>✕ Remove</button>
                         )}
                       </div>
 
-                      <div className="p-inputs-grid">
+                      <div className="p-inputs-grid-aadhaar">
                         <input
                           type="text"
                           placeholder="Full Name"
@@ -395,8 +577,18 @@ export default function TrainDetailsPage() {
                           <option value="O">Other</option>
                         </select>
 
-                        <select
+                        <input
+                          type="text"
+                          placeholder="12-digit Aadhaar Number"
+                          maxLength={12}
                           className="booking-input"
+                          value={p.aadhaar_number}
+                          onChange={e => handlePassengerChange(idx, 'aadhaar_number', e.target.value.replace(/\D/g, ''))}
+                          required
+                        />
+
+                        <select
+                          className="booking-input grid-full-width"
                           value={p.berth_preference}
                           onChange={e => handlePassengerChange(idx, 'berth_preference', e.target.value)}
                         >
@@ -429,10 +621,12 @@ export default function TrainDetailsPage() {
                   id="confirm-booking-btn"
                   type="submit"
                   className="confirm-booking-btn"
-                  disabled={bookingLoading || availability?.available_seats === 0}
+                  disabled={bookingLoading || availability?.available_seats === 0 || !mobileVerified || !aadhaarVerified}
                 >
                   {bookingLoading ? (
                     <span className="btn-spinner" />
+                  ) : !mobileVerified || !aadhaarVerified ? (
+                    '🔒 Verify Mobile & Aadhaar OTP First'
                   ) : availability?.available_seats === 0 ? (
                     '🚫 Fully Booked (0 Seats Available)'
                   ) : (

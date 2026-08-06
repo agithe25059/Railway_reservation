@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../config/db');
 const jwt = require('jsonwebtoken');
+const { generateOTP, sendOTPEmail, sendBookingConfirmationEmail } = require('../services/emailService');
 const router = express.Router();
 
 // Middleware: Authenticate JWT Token
@@ -33,7 +34,123 @@ async function ensureInventoryRecord(poolOrConn, train_id, travel_date, class_co
   );
 }
 
-// ── 1. POST /api/bookings/reserve (CONCURRENCY-SAFE SEAT BOOKING) ─────────────
+// ── OTP ENDPOINTS FOR MOBILE & AADHAAR VERIFICATION ───────────────────────────
+
+// POST /api/bookings/send-mobile-otp
+router.post('/send-mobile-otp', authenticateToken, async (req, res) => {
+  const { phone } = req.body;
+  if (!phone || phone.trim().length !== 10) {
+    return res.status(400).json({ message: 'Please provide a valid 10-digit mobile number.' });
+  }
+
+  try {
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+
+    await pool.query('DELETE FROM otp_verifications WHERE email = ?', [`mobile_${req.user.id}_${phone}`]);
+    await pool.query(
+      'INSERT INTO otp_verifications (email, otp, expires_at) VALUES (?, ?, ?)',
+      [`mobile_${req.user.id}_${phone}`, otp, expiresAt]
+    );
+
+    // Send OTP to user's registered email
+    await sendOTPEmail(req.user.email, otp, req.user.full_name, `Mobile Number (${phone})`);
+    res.json({ success: true, message: `OTP sent to your email to verify mobile number ${phone}.` });
+  } catch (err) {
+    console.error('Send mobile OTP error:', err);
+    res.status(500).json({ message: 'Failed to send Mobile OTP.' });
+  }
+});
+
+// POST /api/bookings/verify-mobile-otp
+router.post('/verify-mobile-otp', authenticateToken, async (req, res) => {
+  const { phone, otp } = req.body;
+  if (!phone || !otp) return res.status(400).json({ message: 'Phone and OTP are required.' });
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM otp_verifications WHERE email = ? ORDER BY created_at DESC LIMIT 1',
+      [`mobile_${req.user.id}_${phone}`]
+    );
+
+    if (rows.length === 0) return res.status(400).json({ message: 'No Mobile OTP requested.' });
+    const record = rows[0];
+
+    if (new Date() > new Date(record.expires_at)) {
+      return res.status(400).json({ message: 'Mobile OTP has expired. Please resend.' });
+    }
+
+    if (record.otp !== otp.toString().trim()) {
+      return res.status(400).json({ message: 'Invalid Mobile OTP.' });
+    }
+
+    await pool.query('DELETE FROM otp_verifications WHERE email = ?', [`mobile_${req.user.id}_${phone}`]);
+    res.json({ success: true, message: 'Mobile number verified successfully! ✅' });
+  } catch (err) {
+    console.error('Verify mobile OTP error:', err);
+    res.status(500).json({ message: 'Failed to verify Mobile OTP.' });
+  }
+});
+
+// POST /api/bookings/send-aadhaar-otp
+router.post('/send-aadhaar-otp', authenticateToken, async (req, res) => {
+  const { aadhaar_number } = req.body;
+  if (!aadhaar_number || aadhaar_number.trim().length !== 12 || !/^\d{12}$/.test(aadhaar_number.trim())) {
+    return res.status(400).json({ message: 'Please enter a valid 12-digit Aadhaar number.' });
+  }
+
+  try {
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const key = `aadhaar_${req.user.id}_${aadhaar_number.trim()}`;
+
+    await pool.query('DELETE FROM otp_verifications WHERE email = ?', [key]);
+    await pool.query(
+      'INSERT INTO otp_verifications (email, otp, expires_at) VALUES (?, ?, ?)',
+      [key, otp, expiresAt]
+    );
+
+    const maskedAadhaar = `XXXX-XXXX-${aadhaar_number.trim().slice(-4)}`;
+    await sendOTPEmail(req.user.email, otp, req.user.full_name, `Aadhaar Card (${maskedAadhaar})`);
+    res.json({ success: true, message: `Aadhaar OTP sent to your registered email for ${maskedAadhaar}.` });
+  } catch (err) {
+    console.error('Send Aadhaar OTP error:', err);
+    res.status(500).json({ message: 'Failed to send Aadhaar OTP.' });
+  }
+});
+
+// POST /api/bookings/verify-aadhaar-otp
+router.post('/verify-aadhaar-otp', authenticateToken, async (req, res) => {
+  const { aadhaar_number, otp } = req.body;
+  if (!aadhaar_number || !otp) return res.status(400).json({ message: 'Aadhaar number and OTP are required.' });
+
+  try {
+    const key = `aadhaar_${req.user.id}_${aadhaar_number.trim()}`;
+    const [rows] = await pool.query(
+      'SELECT * FROM otp_verifications WHERE email = ? ORDER BY created_at DESC LIMIT 1',
+      [key]
+    );
+
+    if (rows.length === 0) return res.status(400).json({ message: 'No Aadhaar OTP requested.' });
+    const record = rows[0];
+
+    if (new Date() > new Date(record.expires_at)) {
+      return res.status(400).json({ message: 'Aadhaar OTP has expired. Please resend.' });
+    }
+
+    if (record.otp !== otp.toString().trim()) {
+      return res.status(400).json({ message: 'Invalid Aadhaar OTP.' });
+    }
+
+    await pool.query('DELETE FROM otp_verifications WHERE email = ?', [key]);
+    res.json({ success: true, message: 'Aadhaar details verified successfully! ✅' });
+  } catch (err) {
+    console.error('Verify Aadhaar OTP error:', err);
+    res.status(500).json({ message: 'Failed to verify Aadhaar OTP.' });
+  }
+});
+
+// ── 2. POST /api/bookings/reserve (CONCURRENCY-SAFE SEAT BOOKING) ─────────────
 router.post('/reserve', authenticateToken, async (req, res) => {
   const { train_id, class_code, travel_date, contact_phone, passengers } = req.body;
   const user_id = req.user.id;
@@ -42,7 +159,7 @@ router.post('/reserve', authenticateToken, async (req, res) => {
     return res.status(400).json({ message: 'Missing required booking details.' });
   }
 
-  if (!contact_phone || contact_phone.trim().length < 10) {
+  if (!contact_phone || contact_phone.trim().length !== 10) {
     return res.status(400).json({ message: 'Please provide a valid 10-digit contact mobile number.' });
   }
 
@@ -54,7 +171,7 @@ router.post('/reserve', authenticateToken, async (req, res) => {
   // Ensure inventory row exists outside transaction first to prevent gap-lock deadlocks
   try {
     await ensureInventoryRecord(pool, train_id, travel_date, class_code);
-  } catch (err) {
+  } catch {
     // Ignore duplicate key errors if another thread inserted it
   }
 
@@ -142,22 +259,23 @@ router.post('/reserve', authenticateToken, async (req, res) => {
 
       const booking_id = bookingResult.insertId;
 
-      // Assign seat numbers & insert passengers
+      // Assign seat numbers & insert passengers (including Aadhaar)
       const assignedPassengers = [];
       for (let i = 0; i < passenger_count; i++) {
         const seat_number = `${class_code}-${currentBooked + i + 1}`;
         const p = passengers[i];
 
         await connection.query(
-          `INSERT INTO passengers (booking_id, name, age, gender, berth_preference, seat_number)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [booking_id, p.name, parseInt(p.age), p.gender, p.berth_preference || 'No Preference', seat_number]
+          `INSERT INTO passengers (booking_id, name, age, gender, aadhaar_number, berth_preference, seat_number)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [booking_id, p.name, parseInt(p.age), p.gender, p.aadhaar_number || null, p.berth_preference || 'No Preference', seat_number]
         );
 
         assignedPassengers.push({
           name: p.name,
           age: p.age,
           gender: p.gender,
+          aadhaar_number: p.aadhaar_number || null,
           berth_preference: p.berth_preference || 'No Preference',
           seat_number,
         });
@@ -167,31 +285,39 @@ router.post('/reserve', authenticateToken, async (req, res) => {
       await connection.commit();
       connection.release();
 
+      const bookingObj = {
+        id: booking_id,
+        pnr,
+        train_number: train.train_number,
+        train_name: train.train_name,
+        class_code,
+        travel_date,
+        contact_phone,
+        total_fare,
+        passenger_count,
+        passengers: assignedPassengers,
+      };
+
+      // ── SEND BOOKING STATUS CONFIRMATION EMAIL ─────────────────────────────
+      try {
+        await sendBookingConfirmationEmail(req.user.email, bookingObj);
+      } catch (mailErr) {
+        console.error('Failed to send booking confirmation email:', mailErr);
+      }
+
       return res.status(201).json({
         success: true,
-        message: '🎉 Booking Confirmed Successfully!',
+        message: '🎉 Booking Confirmed Successfully! Booking status email sent to ' + req.user.email,
         pnr,
-        booking: {
-          id: booking_id,
-          pnr,
-          train_number: train.train_number,
-          train_name: train.train_name,
-          class_code,
-          travel_date,
-          contact_phone,
-          total_fare,
-          passenger_count,
-          passengers: assignedPassengers,
-        },
+        booking: bookingObj,
       });
 
     } catch (err) {
       await connection.rollback();
 
-      // If transient deadlock occurred, retry transaction
       if (err.code === 'ER_LOCK_DEADLOCK' && maxRetries > 1) {
         maxRetries--;
-        await new Promise(r => setTimeout(r, 50)); // Wait 50ms before retry
+        await new Promise(r => setTimeout(r, 50));
         continue;
       }
 
@@ -202,8 +328,7 @@ router.post('/reserve', authenticateToken, async (req, res) => {
   }
 });
 
-// ── 2. GET /api/bookings/availability ────────────────────────────────────────
-// Check real-time remaining seats for a train + class + date
+// ── 3. GET /api/bookings/availability ────────────────────────────────────────
 router.get('/availability', async (req, res) => {
   const { train_id, class_code, travel_date } = req.query;
   if (!train_id || !class_code || !travel_date) {
@@ -235,7 +360,7 @@ router.get('/availability', async (req, res) => {
   }
 });
 
-// ── 3. GET /api/bookings/my-bookings ──────────────────────────────────────────
+// ── 4. GET /api/bookings/my-bookings ──────────────────────────────────────────
 router.get('/my-bookings', authenticateToken, async (req, res) => {
   try {
     const [bookings] = await pool.query(
@@ -251,7 +376,6 @@ router.get('/my-bookings', authenticateToken, async (req, res) => {
       [req.user.id]
     );
 
-    // Fetch passengers for each booking
     const fullBookings = await Promise.all(bookings.map(async (b) => {
       const [passengers] = await pool.query(
         'SELECT * FROM passengers WHERE booking_id = ? ORDER BY id',
@@ -267,7 +391,7 @@ router.get('/my-bookings', authenticateToken, async (req, res) => {
   }
 });
 
-// ── 4. GET /api/bookings/pnr/:pnr ─────────────────────────────────────────────
+// ── 5. GET /api/bookings/pnr/:pnr ─────────────────────────────────────────────
 router.get('/pnr/:pnr', async (req, res) => {
   const { pnr } = req.params;
   try {

@@ -267,6 +267,127 @@
 .avail-no { background: hsla(0, 80%, 60%, 0.18); color: hsl(0, 80%, 70%); border: 1px solid hsla(0, 80%, 60%, 0.3); }
 .checking-txt { color: hsl(25, 95%, 65%); font-style: italic; }
 
+/* ── Verification Step Cards ───────────────────────────── */
+.verification-card-step {
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsla(25, 80%, 50%, 0.25);
+  border-radius: 12px;
+  padding: 1.1rem;
+  margin-bottom: 1.25rem;
+}
+.v-step-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: hsl(0, 0%, 95%);
+  margin-bottom: 0.75rem;
+}
+.v-step-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: hsl(25, 95%, 53%);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.v-step-num.done { background: hsl(145, 65%, 50%); }
+
+.v-error {
+  color: hsl(0, 80%, 70%);
+  background: hsla(0, 80%, 60%, 0.12);
+  border: 1px solid hsla(0, 80%, 60%, 0.3);
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  margin-bottom: 0.6rem;
+}
+.v-success {
+  color: hsl(145, 65%, 60%);
+  background: hsla(145, 65%, 50%, 0.12);
+  border: 1px solid hsla(145, 65%, 50%, 0.3);
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  margin-bottom: 0.6rem;
+}
+
+.v-input-row { display: flex; gap: 0.5rem; }
+.margin-top-sm { margin-top: 0.6rem; }
+
+.v-btn {
+  padding: 0.7rem 1rem;
+  background: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(15, 90%, 48%));
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.v-btn-secondary {
+  padding: 0.7rem 1rem;
+  background: hsl(0, 0%, 16%);
+  border: 1px solid hsla(0, 0%, 100%, 0.15);
+  color: hsl(0, 0%, 80%);
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.v-btn-success {
+  padding: 0.7rem 1rem;
+  background: linear-gradient(135deg, hsl(145, 65%, 50%), hsl(145, 65%, 40%));
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.verified-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: hsla(145, 65%, 50%, 0.12);
+  border: 1px solid hsla(145, 65%, 50%, 0.3);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: hsl(0, 0%, 95%);
+}
+.badge-check {
+  font-weight: 800;
+  color: hsl(145, 65%, 60%);
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+}
+
+.p-inputs-grid-aadhaar {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 2fr;
+  gap: 0.5rem;
+}
+.grid-full-width { grid-column: 1 / -1; }
+
+.aadhaar-badge {
+  background: hsla(220, 80%, 60%, 0.15);
+  color: hsl(220, 90%, 75%);
+  border: 1px solid hsla(220, 80%, 60%, 0.3);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
 /* Passengers Section */
 .passengers-section { margin-bottom: 1.5rem; }
 .passengers-header {
