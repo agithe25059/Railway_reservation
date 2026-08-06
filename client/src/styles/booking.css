@@ -375,8 +375,23 @@
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 2fr;
   gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 .grid-full-width { grid-column: 1 / -1; }
+
+.passenger-aadhaar-verification-box {
+  background: hsl(0, 0%, 10%);
+  border: 1px solid hsla(25, 80%, 50%, 0.2);
+  border-radius: 10px;
+  padding: 0.8rem;
+  margin-top: 0.5rem;
+}
+.p-aadhaar-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: hsl(25, 95%, 62%);
+  margin-bottom: 0.5rem;
+}
 
 .aadhaar-badge {
   background: hsla(220, 80%, 60%, 0.15);
