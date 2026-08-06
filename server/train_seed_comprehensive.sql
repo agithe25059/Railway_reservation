@@ -207,30 +207,30 @@ INSERT IGNORE INTO trains (train_number, train_name, train_type, source_station_
 
 -- ── 3. SEAT CLASSES & FARES FOR ALL TRAINS ───────────────────────────────────
 
--- Helper insertion loop logic for train classes
+-- Helper insertion loop logic for train classes (4 seats per class)
 -- 1A, 2A, 3A for Rajdhanis
 INSERT IGNORE INTO train_classes (train_id, class_code, class_name, total_seats, base_fare)
-SELECT id, '1A', 'First AC', 24, ROUND(distance_km * 3.2, 0) FROM trains WHERE train_type='Rajdhani';
+SELECT id, '1A', 'First AC', 4, ROUND(distance_km * 3.2, 0) FROM trains WHERE train_type='Rajdhani';
 INSERT IGNORE INTO train_classes (train_id, class_code, class_name, total_seats, base_fare)
-SELECT id, '2A', 'Second AC', 52, ROUND(distance_km * 1.9, 0) FROM trains WHERE train_type='Rajdhani';
+SELECT id, '2A', 'Second AC', 4, ROUND(distance_km * 1.9, 0) FROM trains WHERE train_type='Rajdhani';
 INSERT IGNORE INTO train_classes (train_id, class_code, class_name, total_seats, base_fare)
-SELECT id, '3A', 'Third AC', 116, ROUND(distance_km * 1.35, 0) FROM trains WHERE train_type='Rajdhani';
+SELECT id, '3A', 'Third AC', 4, ROUND(distance_km * 1.35, 0) FROM trains WHERE train_type='Rajdhani';
 
 -- Executive Chair (2A code used as EC) & Chair Car (CC) for Shatabdi & Vande Bharat
 INSERT IGNORE INTO train_classes (train_id, class_code, class_name, total_seats, base_fare)
-SELECT id, '2A', 'Executive Chair', 56, ROUND(distance_km * 2.8, 0) FROM trains WHERE train_type IN ('Shatabdi', 'Vande Bharat');
+SELECT id, '2A', 'Executive Chair', 4, ROUND(distance_km * 2.8, 0) FROM trains WHERE train_type IN ('Shatabdi', 'Vande Bharat');
 INSERT IGNORE INTO train_classes (train_id, class_code, class_name, total_seats, base_fare)
-SELECT id, 'CC', 'AC Chair Car', 210, ROUND(distance_km * 1.6, 0) FROM trains WHERE train_type IN ('Shatabdi', 'Vande Bharat');
+SELECT id, 'CC', 'AC Chair Car', 4, ROUND(distance_km * 1.6, 0) FROM trains WHERE train_type IN ('Shatabdi', 'Vande Bharat');
 
 -- 2A, 3A, SL for Duronto & Superfast & Express & Mail
 INSERT IGNORE INTO train_classes (train_id, class_code, class_name, total_seats, base_fare)
-SELECT id, '2A', 'Second AC', 46, ROUND(distance_km * 1.65, 0) FROM trains WHERE train_type IN ('Duronto', 'Superfast', 'Express', 'Mail');
+SELECT id, '2A', 'Second AC', 4, ROUND(distance_km * 1.65, 0) FROM trains WHERE train_type IN ('Duronto', 'Superfast', 'Express', 'Mail');
 INSERT IGNORE INTO train_classes (train_id, class_code, class_name, total_seats, base_fare)
-SELECT id, '3A', 'Third AC', 104, ROUND(distance_km * 1.15, 0) FROM trains WHERE train_type IN ('Duronto', 'Superfast', 'Express', 'Mail');
+SELECT id, '3A', 'Third AC', 4, ROUND(distance_km * 1.15, 0) FROM trains WHERE train_type IN ('Duronto', 'Superfast', 'Express', 'Mail');
 INSERT IGNORE INTO train_classes (train_id, class_code, class_name, total_seats, base_fare)
-SELECT id, 'SL', 'Sleeper', 380, ROUND(distance_km * 0.45, 0) FROM trains WHERE train_type IN ('Duronto', 'Superfast', 'Express', 'Mail');
+SELECT id, 'SL', 'Sleeper', 4, ROUND(distance_km * 0.45, 0) FROM trains WHERE train_type IN ('Duronto', 'Superfast', 'Express', 'Mail');
 INSERT IGNORE INTO train_classes (train_id, class_code, class_name, total_seats, base_fare)
-SELECT id, '2S', 'Second Sitting', 210, ROUND(distance_km * 0.25, 0) FROM trains WHERE train_type IN ('Express', 'Mail');
+SELECT id, '2S', 'Second Sitting', 4, ROUND(distance_km * 0.25, 0) FROM trains WHERE train_type IN ('Express', 'Mail');
 
 SELECT 'Comprehensive Indian Railways dataset loaded successfully!' AS status;
 SELECT COUNT(*) AS total_stations FROM stations;
