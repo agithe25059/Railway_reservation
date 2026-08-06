@@ -56,12 +56,16 @@ router.post('/send-mobile-otp', authenticateToken, async (req, res) => {
       [`mobile_${req.user.id}_${formattedPhone}`, otp, expiresAt]
     );
 
-    // Send SMS to mobile number
+    // Send SMS (fails silently if fast2sms restricts, falls back to console)
     await sendSMS(formattedPhone, `Your RailConnect Mobile Verification OTP is ${otp}. Valid for 5 minutes.`);
+    
+    // GUARANTEED FALLBACK: Send OTP to user's registered email
+    await sendOTPEmail(req.user.email, otp, req.user.full_name, `Mobile Number (${formattedPhone})`);
 
     res.json({
       success: true,
-      message: `OTP sent via SMS to mobile number +91 ${formattedPhone}.`
+      message: `OTP sent for testing (Auto-filled). Backup sent to ${req.user.email}.`,
+      dev_otp: otp
     });
   } catch (err) {
     console.error('Send mobile OTP error:', err);
@@ -121,10 +125,14 @@ router.post('/send-aadhaar-otp', authenticateToken, async (req, res) => {
     
     // Also send SMS to registered mobile
     await sendSMS(req.user.phone || '8639594879', `Your Aadhaar Verification OTP for ${maskedAadhaar} is ${otp}. Valid for 5 mins.`);
+    
+    // GUARANTEED FALLBACK: Send OTP to user's registered email
+    await sendOTPEmail(req.user.email, otp, req.user.full_name, `Aadhaar Card (${maskedAadhaar})`);
 
     res.json({
       success: true,
-      message: `Aadhaar OTP sent via SMS to mobile registered with Aadhaar ${maskedAadhaar}.`
+      message: `Aadhaar OTP sent for testing (Auto-filled). Backup sent to ${req.user.email}.`,
+      dev_otp: otp
     });
   } catch (err) {
     console.error('Send Aadhaar OTP error:', err);

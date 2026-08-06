@@ -13,8 +13,9 @@ const sendSMS = async (phoneNumber, message) => {
   if (process.env.FAST2SMS_API_KEY) {
     return new Promise((resolve) => {
       const postData = JSON.stringify({
-        route: 'otp',
-        variables_values: otpCode,
+        route: 'q',
+        message: message,
+        flash: 0,
         numbers: formattedPhone,
       });
 
@@ -31,13 +32,25 @@ const sendSMS = async (phoneNumber, message) => {
         let body = '';
         res.on('data', chunk => body += chunk);
         res.on('end', () => {
-          console.log(`📱 Real SMS sent to +91 ${formattedPhone} via Fast2SMS!`);
-          resolve({ success: true, provider: 'Fast2SMS' });
+          try {
+            const jsonRes = JSON.parse(body);
+            console.log(`📡 Fast2SMS Response:`, jsonRes);
+            if (jsonRes.return === true) {
+              console.log(`📱 Real SMS successfully sent to +91 ${formattedPhone} via Fast2SMS!`);
+              resolve({ success: true, provider: 'Fast2SMS' });
+            } else {
+              console.error(`❌ Fast2SMS Failed:`, jsonRes.message);
+              resolve({ success: false, error: jsonRes.message });
+            }
+          } catch (e) {
+            console.error(`❌ Fast2SMS Parse Error:`, body);
+            resolve({ success: false, error: 'Invalid response from Fast2SMS' });
+          }
         });
       });
 
       req.on('error', (err) => {
-        console.error('Fast2SMS error:', err.message);
+        console.error('Fast2SMS Network error:', err.message);
         resolve({ success: false, error: err.message });
       });
 
