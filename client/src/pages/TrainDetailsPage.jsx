@@ -62,6 +62,10 @@ export default function TrainDetailsPage() {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState(null);
+  
+  // Seat Change Suggestion State
+  const [seatChangeSuggestion, setSeatChangeSuggestion] = useState(null);
+  const [userMaxSeatChanges, setUserMaxSeatChanges] = useState(0);
 
   const user = JSON.parse(localStorage.getItem('rr_user') || '{}');
 
@@ -267,9 +271,12 @@ export default function TrainDetailsPage() {
     try {
       const res = await api.post('/bookings/reserve', {
         train_id: train.id,
+        source_station_id: train.source_station_id,
+        dest_station_id: train.destination_station_id,
         class_code: selectedClass.class_code,
         travel_date: travelDate,
         contact_phone: contactPhone,
+        max_seat_changes: userMaxSeatChanges,
         passengers: passengers.map(p => ({
           name: p.name,
           age: p.age,
@@ -280,8 +287,13 @@ export default function TrainDetailsPage() {
       });
 
       setConfirmedBooking(res.data.booking);
+      setSeatChangeSuggestion(null); // Clear suggestion on success
     } catch (err) {
-      setBookingError(err.response?.data?.message || 'Booking failed. Seats may have been taken.');
+      if (err.response?.data?.status === 'REQUIRES_SEAT_CHANGE') {
+        setSeatChangeSuggestion(err.response.data);
+      } else {
+        setBookingError(err.response?.data?.message || 'Booking failed. Seats may have been taken.');
+      }
     } finally {
       setBookingLoading(false);
     }
@@ -306,7 +318,9 @@ export default function TrainDetailsPage() {
     );
   }
 
-  const totalFare = Number(selectedClass?.base_fare || 0) * passengers.length;
+  const totalFare = seatChangeSuggestion 
+    ? seatChangeSuggestion.newTotalFare 
+    : Number(selectedClass?.base_fare || 0) * passengers.length;
 
   return (
     <div className="booking-page">
@@ -710,6 +724,34 @@ export default function TrainDetailsPage() {
                     <span>₹{totalFare.toLocaleString()}</span>
                   </div>
                 </div>
+
+                {/* Seat Change Proposal Modal / Banner */}
+                {seatChangeSuggestion && (
+                  <div className="seat-change-proposal-box" style={{ background: 'hsl(40, 100%, 10%)', border: '1px solid hsl(40, 100%, 50%)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                    <h3 style={{ color: 'hsl(40, 100%, 50%)', marginTop: 0 }}>⚠️ {seatChangeSuggestion.message}</h3>
+                    <p style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>
+                      To proceed with this booking, please confirm you accept up to <strong>{seatChangeSuggestion.maxChangesRequired}</strong> seat change(s) during the journey.
+                    </p>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      <label style={{ fontSize: '0.85rem' }}>Max Seat Changes Accepted:</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        max="5"
+                        style={{ width: '60px', padding: '0.5rem', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px' }}
+                        value={userMaxSeatChanges} 
+                        onChange={e => setUserMaxSeatChanges(parseInt(e.target.value) || 0)} 
+                      />
+                      <button 
+                        type="button" 
+                        style={{ padding: '0.5rem 1rem', background: 'hsl(40, 100%, 40%)', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                        onClick={handleBookTickets}
+                      >
+                        Accept & Retry Booking
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Submit Booking Button */}
                 <button

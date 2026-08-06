@@ -173,11 +173,12 @@ router.post('/verify-aadhaar-otp', authenticateToken, async (req, res) => {
 
 // ── 2. POST /api/bookings/reserve (CONCURRENCY-SAFE SEAT BOOKING) ─────────────
 router.post('/reserve', authenticateToken, async (req, res) => {
-  const { train_id, class_code, travel_date, contact_phone, passengers } = req.body;
+  const { train_id, class_code, travel_date, contact_phone, passengers, source_station_id, dest_station_id, max_seat_changes } = req.body;
   const user_id = req.user.id;
+  const maxChanges = parseInt(max_seat_changes) || 0;
 
-  if (!train_id || !class_code || !travel_date || !passengers || !Array.isArray(passengers) || passengers.length === 0) {
-    return res.status(400).json({ message: 'Missing required booking details.' });
+  if (!train_id || !class_code || !travel_date || !passengers || !Array.isArray(passengers) || passengers.length === 0 || !source_station_id || !dest_station_id) {
+    return res.status(400).json({ message: 'Missing required booking details including stations.' });
   }
 
   if (!contact_phone || contact_phone.trim().length !== 10) {
@@ -202,7 +203,6 @@ router.post('/reserve', authenticateToken, async (req, res) => {
   let maxRetries = 3;
   while (maxRetries > 0) {
     try {
-      // ── START ACID TRANSACTION ─────────────────────────────────────────────
       await connection.beginTransaction();
 
       // Fetch train & class details
@@ -212,7 +212,6 @@ router.post('/reserve', authenticateToken, async (req, res) => {
         connection.release();
         return res.status(404).json({ message: 'Train not found.' });
       }
-      const train = trainRows[0];
 
       const [classRows] = await connection.query(
         'SELECT * FROM train_classes WHERE train_id = ? AND class_code = ?',
@@ -223,35 +222,27 @@ router.post('/reserve', authenticateToken, async (req, res) => {
         connection.release();
         return res.status(404).json({ message: 'Selected travel class not available on this train.' });
       }
-      const trainClass = classRows[0];
 
-      // ── RACE CONDITION GUARD: Exclusive Row Lock FOR UPDATE ────────────────
-      const [inventoryRows] = await connection.query(
-        `SELECT total_seats, booked_seats 
-         FROM booking_inventory 
-         WHERE train_id = ? AND travel_date = ? AND class_code = ? 
-         FOR UPDATE`,
-        [train_id, travel_date, class_code]
+      // Delegate to DP Algorithm Service
+      // This will throw REQUIRES_SEAT_CHANGE if changes > maxChanges
+      const allocationResult = await allocateSeatsTransaction(
+        connection, 
+        train_id, 
+        travel_date, 
+        class_code, 
+        source_station_id, 
+        dest_station_id, 
+        passengers,
+        maxChanges
       );
 
-      const inventory = inventoryRows[0];
-      const capacity = inventory ? inventory.total_seats : 4;
-      const currentBooked = inventory ? inventory.booked_seats : 0;
-      const availableSeats = capacity - currentBooked;
-
-      // Check if sufficient seats are available
-      if (availableSeats < passenger_count) {
+      if (allocationResult.status === 'WAITLISTED') {
         await connection.rollback();
         connection.release();
-        return res.status(409).json({
-          message: availableSeats <= 0
-            ? `Sorry! ${class_code} class is FULLY BOOKED (0/4 available) for this date.`
-            : `Only ${availableSeats} seat(s) remaining in ${class_code}. Cannot book for ${passenger_count} passengers.`,
-          availableSeats,
-        });
+        return res.status(409).json({ message: 'Sorry, this route is completely FULL and waitlisted. No seat paths available.' });
       }
 
-      // ── ATOMIC INCREMENT ────────────────────────────────────────────────────
+      // ── ATOMIC INCREMENT FOR LEGACY COMPATIBILITY ───────────────────────────
       await connection.query(
         `UPDATE booking_inventory 
          SET booked_seats = booked_seats + ? 
@@ -260,7 +251,7 @@ router.post('/reserve', authenticateToken, async (req, res) => {
       );
 
       // Calculate total fare
-      const total_fare = Number(trainClass.base_fare) * passenger_count;
+      const total_fare = allocationResult.totalFare || Number(trainClass.base_fare) * passenger_count;
 
       // Generate unique PNR
       let pnr = generatePNR();
@@ -283,13 +274,21 @@ router.post('/reserve', authenticateToken, async (req, res) => {
       // Assign seat numbers & insert passengers (including Aadhaar)
       const assignedPassengers = [];
       for (let i = 0; i < passenger_count; i++) {
-        const seat_number = `${class_code}-${currentBooked + i + 1}`;
         const p = passengers[i];
+        const pAlloc = allocationResult.passengerAllocations[i];
+        
+        // Map seat segments to a printable string, e.g., "A1-1" or "A1-1 -> A1-4"
+        let seat_number_str = "";
+        if (pAlloc.allocations.length === 1) {
+          seat_number_str = `${pAlloc.allocations[0].coach}-${pAlloc.allocations[0].seatNumber}`;
+        } else {
+          seat_number_str = pAlloc.allocations.map(a => `${a.coach}-${a.seatNumber}`).join(' ➔ ');
+        }
 
         await connection.query(
           `INSERT INTO passengers (booking_id, name, age, gender, aadhaar_number, berth_preference, seat_number)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [booking_id, p.name, parseInt(p.age), p.gender, p.aadhaar_number || null, p.berth_preference || 'No Preference', seat_number]
+          [booking_id, p.name, parseInt(p.age), p.gender, p.aadhaar_number || null, p.berth_preference || 'No Preference', seat_number_str]
         );
 
         assignedPassengers.push({
@@ -298,7 +297,7 @@ router.post('/reserve', authenticateToken, async (req, res) => {
           gender: p.gender,
           aadhaar_number: p.aadhaar_number || null,
           berth_preference: p.berth_preference || 'No Preference',
-          seat_number,
+          seat_number: seat_number_str,
         });
       }
 
@@ -335,6 +334,11 @@ router.post('/reserve', authenticateToken, async (req, res) => {
 
     } catch (err) {
       await connection.rollback();
+
+      if (err.message === 'REQUIRES_SEAT_CHANGE') {
+        connection.release();
+        return res.status(409).json(err.payload); // Send specific DP suggestion payload
+      }
 
       if (err.code === 'ER_LOCK_DEADLOCK' && maxRetries > 1) {
         maxRetries--;
